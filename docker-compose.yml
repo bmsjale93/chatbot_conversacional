@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend  # Construimos el servicio a partir del Dockerfile en ./backend
+    container_name: backend_chatbot  # Nombre del contenedor
+    ports:
+      - "8000:8000"  # Exponemos el puerto 8000
+    volumes:
+      - ./backend:/app  # Montamos el código local para desarrollo
+    depends_on:
+      - db  # Esperamos que la base de datos esté disponible
+      - nlp  # Esperamos que el servicio NLP esté disponible
+    env_file:
+      - ./backend/.env  # Variables de entorno específicas del backend
+
+  nlp:
+    build: ./nlp  # Construimos el servicio a partir del Dockerfile en ./nlp
+    container_name: nlp_service  # Nombre del contenedor
+    ports:
+      - "8001:8001"  # Exponemos el puerto 8001
+    volumes:
+      - ./nlp:/app  # Montamos el código local para desarrollo
+      - huggingface_cache:/root/.cache/huggingface  # Volumen para caché de modelos de Hugging Face
+    env_file:
+      - ./nlp/.env  # Variables de entorno específicas del servicio NLP
+    depends_on:
+      - redis  # El servicio NLP depende de Redis
+
+  db:
+    image: mongo:latest  # Usamos la última imagen oficial de MongoDB
+    container_name: mongodb  # Nombre del contenedor
+    ports:
+      - "27017:27017"  # Exponemos el puerto de MongoDB
+    volumes:
+      - mongodb_data:/data/db  # Persistimos los datos en un volumen llamado mongodb_data
+
+  redis:
+    image: redis:alpine  # Imagen ligera de Redis
+    container_name: redis_cache  # Nombre del contenedor
+    ports:
+      - "6379:6379"  # Exponemos el puerto de Redis
+
+volumes:
+  mongodb_data:  # Volumen persistente para MongoDB
+  huggingface_cache:  # Volumen persistente para la caché de modelos de Hugging Face
