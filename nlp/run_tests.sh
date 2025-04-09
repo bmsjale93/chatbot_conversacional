@@ -4,7 +4,7 @@
 mkdir -p ../tests
 
 # Formatear fecha y hora para nombre de archivo
-FECHA=$(date +"%Y%m%d%_H%M%S")
+FECHA=$(date +"%Y-%m-%d_%H:%M:%S")
 ARCHIVO="../tests/test_${FECHA}.txt"
 
 echo ""
