@@ -1,59 +1,108 @@
 #!/bin/bash
 
-# Crear carpeta tests/ si no existe (en el raíz del proyecto)
-mkdir -p ../tests
+# ===============================================
+# Lanzador de tests de la plataforma NLP
+# ===============================================
 
-# Formatear fecha y hora para nombre de archivo
-FECHA=$(date +"%Y-%m-%d_%H:%M:%S")
-ARCHIVO="../tests/test_${FECHA}.txt"
+# Directorios
+REPORTS_DIR="test_reports"
+HISTORICO="$REPORTS_DIR/historico_tests.csv"
+
+# Crear carpeta de reportes si no existe
+mkdir -p "$REPORTS_DIR"
+
+# Formatear fecha y hora para el nombre del archivo de reporte
+FECHA=$(date +"%Y-%m-%d_%H-%M-%S")
+ARCHIVO="$REPORTS_DIR/test_report_${FECHA}.txt"
 
 echo ""
-echo "==============================="
-echo " Ejecutando todos los tests... "
-echo "==============================="
-echo ""
+echo "=============================================="
+echo "🚀 Iniciando ejecución de todos los tests..."
 echo "Los resultados se guardarán en: $ARCHIVO"
+echo "=============================================="
 echo ""
 
-# Redirigir la salida estándar y de error al archivo
+# Variables para métricas
+TOTAL_TESTS=0
+TESTS_OK=0
+TESTS_FAIL=0
+
+# Redirigir toda la salida (stdout y stderr) al archivo
 {
-    echo "==============================="
-    echo "     Resultados de Tests"
+    echo "=============================================="
+    echo "📋 Resultados de la ejecución de tests"
     echo "Fecha y hora: $(date)"
-    echo "==============================="
-
+    echo "=============================================="
     echo ""
-    echo ">> Ejecutando test_cleaner"
-    docker exec -i nlp_service python -m tests.test_cleaner
 
-    echo ""
-    echo ">> Ejecutando test_processor"
-    docker exec -i nlp_service python -m tests.test_processor
+    declare -a TESTS=(
+        "tests.test_cleaner"
+        "tests.test_processor"
+        "tests.test_cache"
+        "tests.test_emotion_model"
+        "tests.test_security"
+        "tests.test_response_save"
+        "tests.test_dialog_manager"
+        "tests.test_intent_detector"
+        "tests.test_conversation_controller"
+        "tests.test_conversation_state"
+        "tests.test_conversation_simulation"
+    )
 
-    echo ""
-    echo ">> Ejecutando test_cache"
-    docker exec -i nlp_service python -m tests.test_cache
+    for TEST in "${TESTS[@]}"; do
+        echo "----------------------------------------------"
+        echo "🔎 Ejecutando: $TEST"
+        echo "----------------------------------------------"
+        docker exec -i nlp_service python -m "$TEST"
 
-    echo ""
-    echo ">> Ejecutando test_emotion_model"
-    docker exec -i nlp_service python -m tests.test_emotion_model
+        if [ $? -eq 0 ]; then
+            echo "✅ $TEST ejecutado correctamente."
+            ((TESTS_OK++))
+        else
+            echo "❌ Error al ejecutar $TEST."
+            ((TESTS_FAIL++))
+        fi
+        ((TOTAL_TESTS++))
+        echo ""
+    done
 
-    echo ""
-    echo ">> Ejecutando test_security"
-    docker exec -i nlp_service python -m tests.test_security
-
-    echo ""
-    echo ">> Ejecutando test_response_save"
-    docker exec -i nlp_service python -m tests.test_response_save
-
-    echo ""
-    echo "==============================="
-    echo " Todos los tests ejecutados ✅ "
-    echo "==============================="
+    echo "=============================================="
+    echo "✅ Todos los tests procesados."
+    echo "=============================================="
 } &> "$ARCHIVO"
 
+# ----------------------------------------------
+# NUEVA PARTE: Registrar en el contenedor
+# ----------------------------------------------
+
+# Crear histórico si no existe en Docker
+docker exec nlp_service bash -c "
+    mkdir -p /app/test_reports &&
+    if [ ! -f /app/test_reports/historico_tests.csv ]; then
+        echo 'fecha,total_tests,tests_ok,tests_fail' > /app/test_reports/historico_tests.csv
+    fi
+"
+
+# Añadir nueva línea
+docker exec nlp_service bash -c "
+    echo '$(date +"%Y-%m-%d %H:%M:%S"),$TOTAL_TESTS,$TESTS_OK,$TESTS_FAIL' >> /app/test_reports/historico_tests.csv
+"
+
+# ----------------------------------------------
+# Generar gráfica
+# ----------------------------------------------
+
 echo ""
-echo "==============================="
-echo " Todos los tests ejecutados ✅ "
-echo "Resultados guardados en: $ARCHIVO"
-echo "==============================="
+echo "----------------------------------------------"
+echo "📈 Generando gráfica de evolución de tests..."
+echo "----------------------------------------------"
+
+docker exec -i nlp_service python scripts/generar_grafica_tests.py
+
+echo ""
+echo "=============================================="
+echo "✅ Finalizado. Consulta:"
+echo "   - Informe individual: $ARCHIVO"
+echo "   - Histórico de tests: (dentro de contenedor) /app/test_reports/historico_tests.csv"
+echo "   - Gráfica evolución: (dentro de contenedor) /app/test_reports/historico_tests.png"
+echo "=============================================="

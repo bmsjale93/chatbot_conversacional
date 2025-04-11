@@ -8,3 +8,5 @@ transformers==4.50.3
 torch
 redis
 pymongo
+pandas
+matplotlib

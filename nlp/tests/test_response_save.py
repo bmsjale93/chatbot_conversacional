@@ -4,21 +4,19 @@ import time
 from datetime import datetime
 from pymongo import MongoClient
 from core.response_generator import generar_respuesta
+from core.database import guardar_interaccion
 
-# Aseguramos que la raíz esté en el path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# Configuración de conexión a MongoDB
 MONGO_URL = os.getenv("DATABASE_URL", "mongodb://db:27017")
 NOMBRE_DB = "chatbot"
 NOMBRE_COLECCION = "historial"
 
 
 def conectar_mongo():
-    """Conectar a MongoDB y devolver la colección."""
     try:
         cliente = MongoClient(MONGO_URL, serverSelectionTimeoutMS=5000)
-        cliente.server_info()  # Validamos conexión
+        cliente.server_info()
         return cliente[NOMBRE_DB][NOMBRE_COLECCION]
     except Exception as e:
         print(f"[❌ ERROR] No se pudo conectar a MongoDB: {e}")
@@ -26,7 +24,6 @@ def conectar_mongo():
 
 
 def imprimir_resultado(doc: dict):
-    """Mostrar bonito el contenido de un documento recuperado."""
     print("\n--- Registro guardado en MongoDB ---")
     print(
         f"📝 Mensaje Usuario: {doc.get('mensaje_usuario', '[No encontrado]')}")
@@ -38,7 +35,6 @@ def imprimir_resultado(doc: dict):
 
 
 def test_guardar_respuesta():
-    """Test para verificar el guardado de una respuesta en MongoDB."""
     print("\n🚀 Iniciando test de guardado en MongoDB...")
 
     coleccion = conectar_mongo()
@@ -46,16 +42,23 @@ def test_guardar_respuesta():
         print("[❌ ERROR] Sin acceso a base de datos. Test cancelado.")
         return
 
-    # Texto de prueba
     texto_prueba = "Hoy me siento feliz de lograr mis metas."
 
-    # Generamos una respuesta simulada
+    # Generamos respuesta simulada
     resultado = generar_respuesta(texto_prueba)
 
-    # Esperamos un poco por seguridad
+    # Guardamos manualmente indicando que también guarde el texto original
+    guardar_interaccion(
+        texto_prueba,
+        resultado.get("respuesta"),
+        resultado.get("estado_emocional"),
+        guardar_texto_original=True  # ¡Aquí el cambio importante!
+    )
+
+    # Esperamos un poco para asegurar persistencia
     time.sleep(2)
 
-    # Buscamos el último documento guardado
+    # Buscamos por el texto original
     doc = coleccion.find_one(
         {"mensaje_usuario": texto_prueba},
         sort=[("_id", -1)]
@@ -68,7 +71,6 @@ def test_guardar_respuesta():
         print("[❌ ERROR] No se encontró el mensaje en la base de datos.")
 
 
-# Ejecutamos si se corre directamente
 if __name__ == "__main__":
     test_guardar_respuesta()
     print("\n🎯 Test de MongoDB completado.\n")
