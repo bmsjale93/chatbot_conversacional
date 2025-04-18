@@ -70,7 +70,7 @@ TESTS_FAIL=0
         "✔️ Gestión de puntuación emocional. Asigna valores numéricos a cada respuesta."
         "✔️ Test de puntuación acumulada. Verifica el total final generado."
         "✔️ Test de funciones de empatía y aclaración. Verifica si el sistema identifica respuestas ambiguas ('no sé', 'quizás') y genera respuestas empáticas adaptadas. Ejemplo: 'no lo sé' → respuesta aclaratoria."
-        "✔️ Simulación completa de una conversación real que incluye una respuesta ambigua del usuario. Se espera que el sistema interrumpa el flujo para aclarar la pregunta antes de continuar."
+        "✔️ Simulación completa de una conversación real que incluye una respuesta ambigua del usuario. Se espera que el sistema interrumpa el flujo para aclarar la pregunta antes de continuar. Además, verifica que la puntuación emocional final se calcule y almacene correctamente."
     )
 
     # Iterar sobre los tests

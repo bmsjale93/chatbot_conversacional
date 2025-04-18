@@ -1,4 +1,5 @@
 from core.conversation_controller import gestionar_mensaje
+from core.score_manager import obtener_puntuaciones
 import uuid
 
 
@@ -34,7 +35,19 @@ def test_conversacion_completa_con_empatia():
             print("\n✅ Conversación finalizada correctamente.\n")
             break
 
-    print("🎯 Simulación completa de conversación con empatía finalizada.\n")
+    # ✅ Verificación de puntuación emocional acumulada
+    puntuacion = obtener_puntuaciones(session_id)
+    print("🧠 Puntuación emocional detectada:")
+    print(puntuacion)
+
+    assert "frecuencia" in puntuacion
+    assert "duracion" in puntuacion
+    assert "intensidad" in puntuacion
+    assert "total" in puntuacion
+    assert puntuacion["total"] >= 5, "❌ Puntuación acumulada inesperadamente baja"
+    print("✅ Puntuación registrada correctamente.")
+
+    print("🎯 Simulación completa de conversación con empatía y puntuación finalizada.\n")
 
 
 if __name__ == "__main__":
