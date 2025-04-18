@@ -50,6 +50,8 @@ TESTS_FAIL=0
         "tests.test_conversation_simulation"
         "tests.test_score_manager"
         "tests.test_puntuacion"
+        "tests.test_empathy_utils"
+        "tests.test_conversacion_empatica"
     )
 
     # Descripciones paralelas
@@ -67,6 +69,8 @@ TESTS_FAIL=0
         "✔️ Simula una conversación completa con el asistente, de principio a fin."
         "✔️ Gestión de puntuación emocional. Asigna valores numéricos a cada respuesta."
         "✔️ Test de puntuación acumulada. Verifica el total final generado."
+        "✔️ Test de funciones de empatía y aclaración. Verifica si el sistema identifica respuestas ambiguas ('no sé', 'quizás') y genera respuestas empáticas adaptadas. Ejemplo: 'no lo sé' → respuesta aclaratoria."
+        "✔️ Simulación completa de una conversación real que incluye una respuesta ambigua del usuario. Se espera que el sistema interrumpa el flujo para aclarar la pregunta antes de continuar."
     )
 
     # Iterar sobre los tests
