@@ -8,6 +8,7 @@ from core.dialog_manager import (
     obtener_mensaje_intensidad_tristeza
 )
 from core.intent_detector import detectar_intencion
+from core.score_manager import asignar_puntuacion
 
 # Tabla de transiciones (opcional, a modo de referencia)
 TRANSICIONES = {
@@ -36,13 +37,11 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
 
     if estado_actual == "presentacion":
         respuesta = obtener_mensaje_presentacion()
-        nuevo_estado = "consentimiento"
-        respuesta["estado"] = nuevo_estado
+        respuesta["estado"] = "consentimiento"
         return respuesta, datos_guardados
 
     elif estado_actual == "consentimiento":
         intencion = detectar_intencion(texto_usuario)
-
         if intencion == "afirmativo":
             respuesta = obtener_mensaje_nombre()
             respuesta["estado"] = "preguntar_nombre"
@@ -59,7 +58,6 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         else:
             respuesta = obtener_mensaje_presentacion()
             respuesta["estado"] = "consentimiento"
-
         return respuesta, datos_guardados
 
     elif estado_actual == "preguntar_nombre":
@@ -79,7 +77,6 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
 
     elif estado_actual == "inicio_exploracion_tristeza":
         intencion = detectar_intencion(texto_usuario)
-
         if intencion == "afirmativo":
             respuesta = obtener_mensaje_frecuencia_tristeza()
             respuesta["estado"] = "preguntar_frecuencia"
@@ -97,23 +94,25 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             nombre = datos_guardados.get("nombre_usuario", "")
             respuesta = obtener_mensaje_exploracion_tristeza(nombre)
             respuesta["estado"] = "inicio_exploracion_tristeza"
-
         return respuesta, datos_guardados
 
     elif estado_actual == "preguntar_frecuencia":
         datos_guardados["frecuencia_tristeza"] = texto_usuario
+        asignar_puntuacion(session_id, "frecuencia", texto_usuario)
         respuesta = obtener_mensaje_duracion_tristeza()
         respuesta["estado"] = "preguntar_duracion"
         return respuesta, datos_guardados
 
     elif estado_actual == "preguntar_duracion":
         datos_guardados["duracion_tristeza"] = texto_usuario
+        asignar_puntuacion(session_id, "duracion", texto_usuario)
         respuesta = obtener_mensaje_intensidad_tristeza()
         respuesta["estado"] = "preguntar_intensidad"
         return respuesta, datos_guardados
 
     elif estado_actual == "preguntar_intensidad":
         datos_guardados["intensidad_tristeza"] = texto_usuario
+        asignar_puntuacion(session_id, "intensidad", texto_usuario)
         respuesta = {
             "estado": "fin",
             "mensaje": (
@@ -125,7 +124,6 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         }
         return respuesta, datos_guardados
 
-    # Fallback de seguridad
     else:
         respuesta = {
             "estado": "error",
