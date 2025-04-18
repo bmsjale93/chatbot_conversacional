@@ -2,7 +2,7 @@ import uuid
 import time
 from pymongo import MongoClient
 from core.database import guardar_interaccion_completa
-from core.score_manager import eliminar_puntuaciones
+from core.score_manager import eliminar_puntuaciones, asignar_puntuacion
 
 # Configuración de conexión a MongoDB
 MONGO_URL = "mongodb://db:27017"
@@ -21,38 +21,45 @@ def test_guardado_interacciones_conversacion():
     session_id = str(uuid.uuid4())
     coleccion = obtener_coleccion()
 
-    # Eliminar previos por seguridad
+    # Limpiar cualquier documento anterior por seguridad
     coleccion.delete_many({"session_id": session_id})
 
-    # Simulamos 3 interacciones de conversación
-    guardar_interaccion_completa(
-        session_id, "preguntar_nombre", "¿Con qué nombre?", "Lucía", "neutral", 0)
-    guardar_interaccion_completa(
-        session_id, "preguntar_duracion", "¿Cuánto tiempo dura?", "Unas horas", "negativo", 3)
-    guardar_interaccion_completa(
-        session_id, "preguntar_intensidad", "¿Nivel del 1 al 10?", "7", "negativo", 5)
+    # Simulamos que el usuario ha recibido puntuaciones
+    asignar_puntuacion(session_id, "frecuencia", "todos los días")  # 3
+    asignar_puntuacion(session_id, "duracion", "unas horas")        # 1
+    asignar_puntuacion(session_id, "intensidad", "7")               # 2
 
-    # Esperamos a que MongoDB registre todo
+    # Simulamos el guardado de interacciones reales
+    guardar_interaccion_completa(session_id, "preguntar_frecuencia",
+                                 "¿Con qué frecuencia sientes tristeza?", "Todos los días")
+    guardar_interaccion_completa(session_id, "preguntar_duracion",
+                                 "¿Cuánto tiempo dura?", "Unas horas")
+    guardar_interaccion_completa(session_id, "preguntar_intensidad",
+                                 "¿Nivel del 1 al 10?", "7")
+
+    # Esperamos a que se guarde en MongoDB
     time.sleep(1)
 
-    # Buscamos por session_id
+    # Verificamos que los documentos estén correctamente guardados
     resultados = list(coleccion.find({"session_id": session_id}))
     assert len(
         resultados) == 3, f"❌ Se esperaban 3 documentos, encontrados {len(resultados)}."
 
     for doc in resultados:
-        assert "estado" in doc
+        print(f"✅ Registro verificado: estado = {doc['estado']}")
         assert "pregunta" in doc
         assert "respuesta_usuario" in doc
-        assert "timestamp" in doc
+        assert "emocion" in doc
+        assert doc["emocion"] in ["negativo", "neutro", "positivo"], f"❌ Emoción no válida: {doc['emocion']}"
         assert "puntuacion" in doc
-        print(f"✅ Registro encontrado en estado: {doc['estado']}")
+        assert isinstance(doc["puntuacion"], int)
+        assert "timestamp" in doc
 
-    # Limpiar
+    # Limpiar datos de prueba
     coleccion.delete_many({"session_id": session_id})
     eliminar_puntuaciones(session_id)
 
-    print("🎯 Test de guardado de conversación completado correctamente.\n")
+    print("🎯 Test de guardado de conversación con emoción completado correctamente.\n")
 
 
 if __name__ == "__main__":

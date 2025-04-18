@@ -37,16 +37,12 @@ TRANSICIONES = {
 
 
 def registrar_interaccion(session_id: str, estado: str, pregunta: str, respuesta_usuario: str):
-    puntuacion_total = obtener_puntuaciones(session_id).get("total", 0)
     guardar_interaccion_completa(
         session_id=session_id,
         estado=estado,
         pregunta=pregunta,
-        respuesta_usuario=respuesta_usuario,
-        emocion="pendiente",
-        puntuacion=puntuacion_total
+        respuesta_usuario=respuesta_usuario
     )
-
 
 def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, datos_guardados: dict) -> tuple:
     if estado_actual == "presentacion":
