@@ -84,10 +84,21 @@ def test_flujo_duracion_a_intensidad():
 
 def test_flujo_finalizacion():
     print("🔎 Test: Finalización conversación...")
+
+    # 1. Desde intensidad hasta mostrar resumen
     inicializar_estado("preguntar_intensidad")
     respuesta = gestionar_mensaje(SESSION_ID, "8")
-    assert respuesta["estado"] == "fin", "❌ Debería finalizar la conversación."
-    print("✅ Flujo finalización correcto.")
+    assert respuesta["estado"] == "mostrar_resumen", "❌ Debería pasar a mostrar_resumen."
+
+    # 2. Desde mostrar resumen hasta preguntar empatía
+    respuesta = gestionar_mensaje(SESSION_ID, "Ok")
+    assert respuesta["estado"] == "preguntar_empatia", "❌ Debería pasar a preguntar_empatia."
+
+    # 3. Desde preguntar empatía hasta cierre_final
+    respuesta = gestionar_mensaje(SESSION_ID, "9")
+    assert respuesta["estado"] == "cierre_final", "❌ Debería finalizar la conversación."
+
+    print("✅ Flujo finalización completo correcto.")
 
 
 if __name__ == "__main__":

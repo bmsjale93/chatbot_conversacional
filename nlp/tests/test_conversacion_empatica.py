@@ -10,17 +10,17 @@ def test_conversacion_completa_con_empatia():
 
     # Flujo conversacional completo simulando correctamente cada fase
     mensajes = [
-        # Fase de presentación y consentimiento
         ("Hola", "consentimiento"),
         ("Sí, quiero continuar", "preguntar_nombre"),
-        # Progreso normal
         ("Lucía", "preguntar_identidad"),
         ("Femenino", "inicio_exploracion_tristeza"),
         ("Sí, últimamente me siento triste", "preguntar_frecuencia"),
         ("no lo sé", "preguntar_frecuencia"),  # Ambigua -> aclaración
         ("Todos los días", "preguntar_duracion"),
         ("Unas horas", "preguntar_intensidad"),
-        ("9", "fin")
+        ("9", "mostrar_resumen"),
+        ("ok", "preguntar_empatia"),
+        ("8", "cierre_final")  # ✅ Este paso estaba faltando
     ]
 
     for idx, (mensaje, estado_esperado) in enumerate(mensajes, 1):
@@ -31,7 +31,8 @@ def test_conversacion_completa_con_empatia():
         assert respuesta[
             "estado"] == estado_esperado, f"❌ Estado inesperado: se esperaba {estado_esperado}"
 
-        if respuesta.get("estado") == "fin":
+
+        if respuesta.get("estado") == "cierre_final":
             print("\n✅ Conversación finalizada correctamente.\n")
             break
 

@@ -53,6 +53,7 @@ TESTS_FAIL=0
         "tests.test_empathy_utils"
         "tests.test_conversacion_empatica"
         "tests.test_guardado_conversacion"
+        "tests.test_evaluacion_final"
     )
 
     # Descripciones paralelas
@@ -73,6 +74,7 @@ TESTS_FAIL=0
         "✔️ Test de funciones de empatía y aclaración. Verifica si el sistema identifica respuestas ambiguas ('no sé', 'quizás') y genera respuestas empáticas adaptadas. Ejemplo: 'no lo sé' → respuesta aclaratoria."
         "✔️ Simulación completa de una conversación real que incluye una respuesta ambigua del usuario. Se espera que el sistema interrumpa el flujo para aclarar la pregunta antes de continuar. Además, verifica que la puntuación emocional final se calcule y almacene correctamente."
         "✔️ Verifica que las interacciones relevantes se registran correctamente en MongoDB. Se simulan varias preguntas/respuestas con puntuaciones acumuladas y se comprueba que todos los campos obligatorios se han guardado."
+        "✔️ Verifica el cierre emocional del flujo de conversación. Se evalúa el resumen emocional, la percepción de empatía y el correcto almacenamiento en MongoDB."
     )
 
     # Iterar sobre los tests
