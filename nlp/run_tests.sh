@@ -3,6 +3,7 @@
 # ===============================================
 # Lanzador de tests de la plataforma NLP
 # ===============================================
+INICIO=$(date +%s)
 
 # Directorios
 REPORTS_DIR="test_reports"
@@ -54,6 +55,7 @@ TESTS_FAIL=0
         "tests.test_conversacion_empatica"
         "tests.test_guardado_conversacion"
         "tests.test_evaluacion_final"
+        "tests.test_flujo_completo"
     )
 
     # Descripciones paralelas
@@ -75,6 +77,7 @@ TESTS_FAIL=0
         "✔️ Simulación completa de una conversación real que incluye una respuesta ambigua del usuario. Se espera que el sistema interrumpa el flujo para aclarar la pregunta antes de continuar. Además, verifica que la puntuación emocional final se calcule y almacene correctamente."
         "✔️ Verifica que las interacciones relevantes se registran correctamente en MongoDB. Se simulan varias preguntas/respuestas con puntuaciones acumuladas y se comprueba que todos los campos obligatorios se han guardado."
         "✔️ Verifica el cierre emocional del flujo de conversación. Se evalúa el resumen emocional, la percepción de empatía y el correcto almacenamiento en MongoDB."
+        "✔️ Verifica todo el flujo conversacional: entrada de mensaje, gestión por controlador, puntuación, almacenamiento en Redis y MongoDB. Certifica el funcionamiento final de todo el sistema."
     )
 
     # Iterar sobre los tests
@@ -129,3 +132,7 @@ echo "   - Informe individual: $ARCHIVO"
 echo "   - Histórico de tests: /app/test_reports/historico_tests.csv"
 echo "   - Gráfica evolución:  /app/test_reports/historico_tests.png"
 echo "=============================================="
+
+FIN=$(date +%s)
+DURACION=$((FIN - INICIO))
+echo "🕒 Duración total de tests: ${DURACION}s"
