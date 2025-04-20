@@ -27,6 +27,19 @@ services:
     depends_on:
       - redis  # El servicio NLP depende de Redis
 
+  frontend:
+    build: ./frontend
+    container_name: frontend_gradio
+    ports:
+      - "7860:7860"  # Puerto por defecto de Gradio
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      - backend
+      - nlp
+    env_file:
+      - ./frontend/.env
+
   db:
     image: mongo:latest  # Usamos la última imagen oficial de MongoDB
     container_name: mongodb  # Nombre del contenedor
