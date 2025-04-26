@@ -27,6 +27,7 @@ echo ""
 TOTAL_TESTS=0
 TESTS_OK=0
 TESTS_FAIL=0
+FAILED_TESTS=()   # Array para guardar los tests que fallen
 
 # Redirigir la salida completa al archivo de log
 {
@@ -98,6 +99,7 @@ TESTS_FAIL=0
         else
             echo "❌ Error al ejecutar $TEST."
             ((TESTS_FAIL++))
+            FAILED_TESTS+=("$TEST")
         fi
         ((TOTAL_TESTS++))
         echo ""
@@ -106,6 +108,7 @@ TESTS_FAIL=0
     echo "=============================================="
     echo "✅ Todos los tests procesados."
     echo "=============================================="
+
 } &> "$ARCHIVO"
 
 # Guardar histórico dentro del contenedor
@@ -124,7 +127,7 @@ echo "📈 Generando gráfica de evolución de tests..."
 echo "----------------------------------------------"
 docker exec -i nlp_service python scripts/generar_grafica_tests.py
 
-# Mensaje final
+# Mensaje final con resumen de errores
 echo ""
 echo "=============================================="
 echo "✅ Finalizado. Consulta:"
@@ -132,7 +135,20 @@ echo "   - Informe individual: $ARCHIVO"
 echo "   - Histórico de tests: /app/test_reports/historico_tests.csv"
 echo "   - Gráfica evolución:  /app/test_reports/historico_tests.png"
 echo "=============================================="
+echo ""
+
+if [ ${#FAILED_TESTS[@]} -eq 0 ]; then
+    echo "🎉 Todos los tests han pasado correctamente."
+else
+    echo "⚠️ ${#FAILED_TESTS[@]} test(s) han fallado."
+    echo "Tests fallidos:"
+    for test in "${FAILED_TESTS[@]}"; do
+        echo "   - $test"
+    done
+fi
 
 FIN=$(date +%s)
 DURACION=$((FIN - INICIO))
+echo ""
 echo "🕒 Duración total de tests: ${DURACION}s"
+echo ""
