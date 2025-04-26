@@ -5,7 +5,7 @@ def test_conexion_backend():
     """
     Verifica que el frontend puede comunicarse correctamente con el backend FastAPI.
     """
-    BACKEND_URL = "http://backend:8000/chat"  # Dirección del backend en Docker
+    BACKEND_URL = "http://backend:8000/api/chat"
     session_id = str(uuid.uuid4())
     mensaje_usuario = "Hola, quiero comenzar la evaluación"
 

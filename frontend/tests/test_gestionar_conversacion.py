@@ -1,5 +1,3 @@
-# tests/test_gestionar_conversacion.py
-
 import requests
 import uuid
 import sys
@@ -8,7 +6,7 @@ def test_endpoint_gestionar_conversacion():
     print("🔍 Iniciando test de conversación completa vía /chat...", flush=True)
 
     # Endpoint del backend
-    URL_BACKEND = "http://backend:8000/chat"
+    URL_BACKEND = "http://backend:8000/api/chat"
 
     # Generamos un session_id único para simular una sesión real
     session_id = str(uuid.uuid4())

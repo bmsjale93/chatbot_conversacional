@@ -3,14 +3,13 @@ import requests
 import uuid
 
 # URL del backend FastAPI (ajusta si ejecutas en local fuera de Docker)
-BACKEND_URL = "http://backend:8000/chat"
+BACKEND_URL = "http://backend:8000/api/chat"
 
 # Generamos un session_id único por sesión
 session_id = str(uuid.uuid4())
 
 # Estado global de conversación
 conversacion_activa = True
-
 
 def enviar_mensaje(mensaje_usuario, historial):
     global conversacion_activa
@@ -22,6 +21,7 @@ def enviar_mensaje(mensaje_usuario, historial):
         return historial + [("", "⚠️ Por favor, escribe algo para continuar.")], "", gr.update(visible=False, choices=[])
 
     try:
+        # Enviamos el mensaje al backend
         respuesta = requests.post(
             BACKEND_URL,
             json={
@@ -32,12 +32,15 @@ def enviar_mensaje(mensaje_usuario, historial):
         )
         respuesta.raise_for_status()
         data = respuesta.json()
-        mensaje_asistente = data.get(
-            "mensaje", "No se recibió una respuesta válida.")
+
+        mensaje_asistente = data.get("mensaje", "No se recibió una respuesta válida.")
         estado = data.get("estado", "")
         sugerencias = data.get("sugerencias", [])
 
-        historial = historial + [(mensaje_usuario, mensaje_asistente)]
+        # Actualizamos el historial mostrando turno de usuario y asistente
+        historial = historial + [
+            (f"👤 Tú: {mensaje_usuario}", f"🤖 Asistente: {mensaje_asistente}")
+        ]
 
         if estado == "fin":
             conversacion_activa = False
@@ -46,11 +49,14 @@ def enviar_mensaje(mensaje_usuario, historial):
 
     except requests.exceptions.RequestException as e:
         historial.append(
-            (mensaje_usuario, f"❌ Error al contactar con el backend: {e}"))
+            (f"👤 Tú: {mensaje_usuario}", f"❌ Error al contactar con el backend: {e}")
+        )
         return historial, "", gr.update(visible=False, choices=[])
 
     except Exception as e:
-        historial.append((mensaje_usuario, f"❌ Error interno inesperado: {e}"))
+        historial.append(
+            (f"👤 Tú: {mensaje_usuario}", f"❌ Error interno inesperado: {e}")
+        )
         return historial, "", gr.update(visible=False, choices=[])
 
 

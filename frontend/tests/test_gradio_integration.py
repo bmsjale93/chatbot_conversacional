@@ -21,7 +21,7 @@ def test_gradio_integration():
         # Este endpoint depende de que hayas hecho accesible la API /chat también desde el frontend
         # Si no está expuesto, este test se puede adaptar para interactuar directamente con el backend
         response = requests.post(
-            "http://backend:8000/chat",
+            "http://backend:8000/api/chat",
             json={
                 "session_id": session_id,
                 "mensaje_usuario": mensaje_usuario

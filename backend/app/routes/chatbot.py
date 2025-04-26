@@ -6,9 +6,16 @@ router = APIRouter()
 
 @router.post("/chat")
 async def chat_endpoint(mensaje: Message):
+    # Validación básica extra (aunque FastAPI ya valida estructura con Pydantic)
+    if not mensaje.session_id or not mensaje.mensaje_usuario:
+        return {
+            "mensaje": "❌ Error: falta session_id o mensaje_usuario.",
+            "estado": "fin",
+            "sugerencias": []
+        }
+
     respuesta = await analizar_mensaje(mensaje)
 
-    # Si contiene error, construimos una respuesta válida para el frontend
     if "error" in respuesta:
         return {
             "mensaje": f"❌ Error interno: {respuesta['error']}",
@@ -16,7 +23,6 @@ async def chat_endpoint(mensaje: Message):
             "sugerencias": []
         }
 
-    # Si la respuesta ya es válida y tiene la estructura esperada
     return {
         "mensaje": respuesta.get("mensaje", "Respuesta no disponible."),
         "estado": respuesta.get("estado", "fin"),
