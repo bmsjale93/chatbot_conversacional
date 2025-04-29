@@ -1,8 +1,8 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
 
 class Message(BaseModel):
-    # ID de sesión del usuario (para controlar la conversación)
-    session_id: str
-    
-    # Texto del mensaje que envía el usuario
-    mensaje_usuario: str
+    session_id: str = Field(..., min_length=1,
+                            description="ID único de la sesión del usuario.")
+    mensaje_usuario: str = Field(..., min_length=1,
+                                 description="Mensaje enviado por el usuario.")

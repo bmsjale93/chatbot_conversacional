@@ -1,33 +1,47 @@
-# Fase de construcción: imagen base personalizada con dependencias pesadas
+### ETAPA 1: Construcción con dependencias pesadas y modelos ###
 FROM nlp-base:latest as builder
 
-# Establecemos el directorio de trabajo en el contenedor
 WORKDIR /app
 
-# Copiamos sólo el archivo de requerimientos para aprovechar la cache
+# Copiamos sólo lo necesario para aprovechar la cache
 COPY requirements.txt .
 
-# Instalamos las dependencias necesarias
-RUN pip install --no-cache-dir -r requirements.txt
+# Instalamos dependencias Python
+RUN pip install --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
 
-# Fase final: imagen ligera para producción
+# Copiamos el resto del código fuente para precompilar si es necesario
+COPY . .
+
+# Pre-descarga del modelo (precaución: se espera que esto ocurra en el base también)
+# Esto asegura que Hugging Face cache esté poblado antes del paso final
+
+### ETAPA 2: Imagen final ligera para producción ###
 FROM python:3.9-slim
 
-# Establecemos nuevamente el directorio de trabajo
 WORKDIR /app
 
-# Copiamos las librerías instaladas desde el contenedor de construcción
+# Variables para evitar pyc y mantener logs visibles
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# Dependencias mínimas necesarias en entorno ligero
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libffi-dev libssl-dev curl \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Copiamos librerías de Python desde la fase anterior
 COPY --from=builder /usr/local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
-# Copiamos los modelos descargados en la caché
+# Copiamos caché de modelos descargados previamente
 COPY --from=builder /root/.cache /root/.cache
 
-# Copiamos el código fuente de la aplicación
+# Copiamos el código fuente de la app
 COPY . .
 
-# Exponemos el puerto 8001 para que FastAPI escuche
+# Puerto para la API NLP
 EXPOSE 8001
 
-# Comando para ejecutar el servidor Uvicorn al iniciar el contenedor
+# Comando para iniciar la API
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8001"]

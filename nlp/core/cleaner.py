@@ -1,16 +1,32 @@
-# Módulo de expresiones regulares
 import re
+import unicodedata
+from typing import Optional
 
-# Función para limpiar el texto de entrada
-def limpiar_texto(texto: str) -> str:
+# -------------------- Expresiones Regulares --------------------
+PATRON_URL = re.compile(r"http\S+")
+PATRON_NO_ALFANUMERICO = re.compile(r"[^a-záéíóúñü0-9\s]", re.IGNORECASE)
+PATRON_MULTIPLES_ESPACIOS = re.compile(r"\s+")
+
+# -------------------- Función Principal --------------------
+def limpiar_texto(texto: Optional[str]) -> str:
     """
-    Limpia el texto eliminando URLs, caracteres no alfabéticos, signos de puntuación,
-    múltiples espacios y lo convierte todo a minúsculas.
+    Limpia un texto eliminando URLs, caracteres no alfabéticos, puntuación y espacios innecesarios.
+    
+    Args:
+        texto (str | None): Texto original a limpiar.
+
+    Returns:
+        str: Texto limpio y normalizado.
     """
-    texto = texto.lower()  # Convertimos el texto a minúsculas
-    texto = re.sub(r"http\S+", "", texto)  # Eliminamos URLs
-    # Eliminamos caracteres que no sean letras, números o espacios
-    texto = re.sub(r"[^a-záéíóúñü0-9\s]", "", texto)
-    # Reemplazamos múltiples espacios por uno solo
-    texto = re.sub(r"\s+", " ", texto)
-    return texto.strip()  # Eliminamos espacios al inicio y al final
+    if not texto or not isinstance(texto, str):
+        return ""
+
+    # Normalización unicode para tratar tildes y caracteres especiales de forma consistente
+    texto = unicodedata.normalize("NFC", texto)
+
+    texto = texto.lower()                         # Todo a minúsculas
+    texto = PATRON_URL.sub("", texto)             # Eliminar URLs
+    texto = PATRON_NO_ALFANUMERICO.sub("", texto)  # Eliminar símbolos raros
+    texto = PATRON_MULTIPLES_ESPACIOS.sub(" ", texto)  # Unificar espacios
+
+    return texto.strip()  # Quitar espacios extremos

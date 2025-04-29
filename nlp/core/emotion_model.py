@@ -1,42 +1,47 @@
-# Importamos el pipeline de Hugging Face para análisis de sentimientos
+# nlp/core/emotion_model.py
 from transformers import pipeline
+from typing import Dict
 
-# Inicializamos el modelo de análisis de sentimiento
-modelo = pipeline(
-    task="sentiment-analysis",
-    model="pysentimiento/robertuito-sentiment-analysis"
-)
+# Diccionario para traducir las etiquetas
+MAPEO_EMOCIONES = {
+    "POS": "Positivo",
+    "NEU": "Neutro",
+    "NEG": "Negativo"
+}
 
-# Función para ajustar manualmente el resultado del modelo
-def ajustar_emocion(texto: str, resultado_modelo: dict) -> dict:
+# Modelo NLP de HuggingFace (inicialización lazy)
+modelo = None
+
+def cargar_modelo():
+    global modelo
+    if modelo is None:
+        modelo = pipeline(
+            task="sentiment-analysis",
+            model="pysentimiento/robertuito-sentiment-analysis"
+        )
+
+
+def ajustar_emocion(texto: str, resultado_modelo: dict) -> Dict[str, str]:
     """
-    Aplica reglas personalizadas sobre el resultado del modelo para mejorar la interpretación.
+    Ajusta manualmente la emoción basada en reglas personalizadas.
     """
-    label = resultado_modelo["label"]  # Resultado del modelo: POS, NEU o NEG
-    score = resultado_modelo["score"]
+    label = resultado_modelo.get("label", "NEU")
+    score = resultado_modelo.get("score", 0)
 
-    # Si el resultado es negativo pero poco confiable y el texto contiene "no sé", cambiamos a neutro
+    # Reglas específicas
     if label == "NEG" and score < 0.85 and "no sé" in texto.lower():
         label = "NEU"
 
-    # Diccionario para traducir las etiquetas
-    emociones = {
-        "POS": "Positivo",
-        "NEU": "Neutro",
-        "NEG": "Negativo"
-    }
-
     return {
-        "estado_emocional": emociones.get(label, "desconocido"),
+        "estado_emocional": MAPEO_EMOCIONES.get(label, "desconocido"),
         "confianza": f"{round(score * 100, 1)}%"
     }
 
-# Función principal para analizar el sentimiento del texto
-def analizar_sentimiento(texto: str) -> dict:
+
+def analizar_sentimiento(texto: str) -> Dict[str, str]:
     """
     Analiza el sentimiento de un texto y devuelve el estado emocional y la confianza.
     """
-    # Si el texto está vacío o sólo tiene espacios, devolvemos desconocido
     if not texto.strip():
         return {
             "estado_emocional": "desconocido",
@@ -44,11 +49,10 @@ def analizar_sentimiento(texto: str) -> dict:
         }
 
     try:
-        # Analizamos el sentimiento y ajustamos el resultado
+        cargar_modelo()
         resultado = modelo(texto)[0]
         return ajustar_emocion(texto, resultado)
     except Exception as e:
-        # Si ocurre un error, devolvemos un estado de error
         return {
             "estado_emocional": "error",
             "confianza": "0%",

@@ -1,46 +1,44 @@
 import gradio as gr
 import requests
 import uuid
+import os
 
-# URL del backend FastAPI (ajusta si ejecutas en local fuera de Docker)
-BACKEND_URL = "http://backend:8000/api/chat"
-
-# Generamos un session_id único por sesión
+# ------------------- Configuración -------------------
+BACKEND_URL = os.getenv("BACKEND_URL", "http://backend:8000/api/chat")
 session_id = str(uuid.uuid4())
-
-# Estado global de conversación
 conversacion_activa = True
 
-def enviar_mensaje(mensaje_usuario, historial):
+# ------------------- Función principal -------------------
+def enviar_mensaje(mensaje_usuario: str, historial: list) -> tuple:
     global conversacion_activa
 
     if not conversacion_activa:
-        return historial + [("", "⚠️ La conversación ha finalizado.")], "", gr.update(visible=False, choices=[])
+        historial.append(
+            ("Sistema", "La conversación ha finalizado. Reinicia para comenzar de nuevo."))
+        return historial, "", gr.update(visible=False, choices=[])
 
-    if not mensaje_usuario.strip():
-        return historial + [("", "⚠️ Por favor, escribe algo para continuar.")], "", gr.update(visible=False, choices=[])
+    mensaje_usuario = mensaje_usuario.strip()
+    if not mensaje_usuario:
+        historial.append(
+            ("Sistema", "Por favor, escribe un mensaje para continuar."))
+        return historial, "", gr.update(visible=False, choices=[])
 
     try:
-        # Enviamos el mensaje al backend
-        respuesta = requests.post(
+        response = requests.post(
             BACKEND_URL,
-            json={
-                "session_id": session_id,
-                "mensaje_usuario": mensaje_usuario
-            },
+            json={"session_id": session_id, "mensaje_usuario": mensaje_usuario},
             timeout=10
         )
-        respuesta.raise_for_status()
-        data = respuesta.json()
+        response.raise_for_status()
+        data = response.json()
 
-        mensaje_asistente = data.get("mensaje", "No se recibió una respuesta válida.")
+        mensaje_asistente = data.get(
+            "mensaje", "Respuesta no disponible en este momento.")
         estado = data.get("estado", "")
         sugerencias = data.get("sugerencias", [])
 
-        # Actualizamos el historial mostrando turno de usuario y asistente
-        historial = historial + [
-            (f"👤 Tú: {mensaje_usuario}", f"🤖 Asistente: {mensaje_asistente}")
-        ]
+        historial.append(("Usuario", mensaje_usuario))
+        historial.append(("Asistente", mensaje_asistente))
 
         if estado == "fin":
             conversacion_activa = False
@@ -49,47 +47,78 @@ def enviar_mensaje(mensaje_usuario, historial):
 
     except requests.exceptions.RequestException as e:
         historial.append(
-            (f"👤 Tú: {mensaje_usuario}", f"❌ Error al contactar con el backend: {e}")
-        )
+            ("Error", f"No se pudo contactar con el servidor: {e}"))
         return historial, "", gr.update(visible=False, choices=[])
 
     except Exception as e:
-        historial.append(
-            (f"👤 Tú: {mensaje_usuario}", f"❌ Error interno inesperado: {e}")
-        )
+        historial.append(("Error", f"Ocurrió un error inesperado: {e}"))
         return historial, "", gr.update(visible=False, choices=[])
 
+# ------------------- Reinicio de Conversación -------------------
 
-def reiniciar_conversacion():
+
+def reiniciar_conversacion() -> tuple:
     global session_id, conversacion_activa
     session_id = str(uuid.uuid4())
     conversacion_activa = True
     return [], "", gr.update(visible=False, choices=[])
 
 
-# Interfaz visual con Gradio
-with gr.Blocks() as interfaz:
-    gr.Markdown("## 🤖 Asistente Virtual de Evaluación Emocional")
-    gr.Markdown("Habla conmigo para explorar cómo te has sentido últimamente.")
+# ------------------- Interfaz Gradio -------------------
+with gr.Blocks(theme=gr.themes.Soft()) as interfaz:
+    gr.Markdown(
+        """
+        # Asistente Virtual de Evaluación Emocional
+        ---
+        Este asistente conversacional está diseñado para ayudarte a reflexionar sobre tu estado emocional.  
+        Puedes detener la conversación en cualquier momento.
+        """,
+        elem_id="titulo"
+    )
 
-    chat = gr.Chatbot(label="Conversación")
-    mensaje_input = gr.Textbox(
-        placeholder="Escribe tu mensaje aquí...", label="Tu mensaje", lines=2)
-    sugerencias = gr.Dropdown(
-        choices=[], visible=False, label="¿Quieres usar una sugerencia rápida?")
-    boton_enviar = gr.Button("Enviar")
-    boton_reiniciar = gr.Button("🔄 Reiniciar Conversación")
+    with gr.Row(equal_height=True):
+        with gr.Column(scale=3):
+            chat = gr.Chatbot(label="Historial de Conversación", height=600)
 
-    # Acciones
-    mensaje_input.submit(fn=enviar_mensaje, inputs=[mensaje_input, chat], outputs=[
+        with gr.Column(scale=2):
+            mensaje_input = gr.Textbox(
+                placeholder="Escribe tu mensaje aquí...",
+                label="Tu mensaje",
+                lines=4,
+                autofocus=True
+            )
+
+            sugerencias = gr.Dropdown(
+                choices=[],
+                visible=False,
+                label="Sugerencias disponibles"
+            )
+
+            boton_enviar = gr.Button("Enviar mensaje", variant="primary")
+            boton_reiniciar = gr.Button(
+                "Reiniciar conversación", variant="secondary")
+
+            gr.Markdown(
+                """
+                **Instrucciones rápidas:**
+                - Puedes escribir con libertad.
+                - Usa las sugerencias si no sabes qué responder.
+                - El botón de reinicio te permite empezar de nuevo.
+                """,
+                elem_id="instrucciones"
+            )
+
+    # Eventos
+    mensaje_input.submit(enviar_mensaje, [mensaje_input, chat], [
                          chat, mensaje_input, sugerencias])
-    boton_enviar.click(fn=enviar_mensaje, inputs=[mensaje_input, chat], outputs=[
+    boton_enviar.click(enviar_mensaje, [mensaje_input, chat], [
                        chat, mensaje_input, sugerencias])
-    boton_reiniciar.click(fn=reiniciar_conversacion, outputs=[
+    boton_reiniciar.click(reiniciar_conversacion, outputs=[
                           chat, mensaje_input, sugerencias])
-    sugerencias.change(fn=enviar_mensaje, inputs=[sugerencias, chat], outputs=[
+    sugerencias.change(enviar_mensaje, [sugerencias, chat], [
                        chat, mensaje_input, sugerencias])
 
-# Lanzar servidor Gradio
+
+# ------------------- Lanzar Interfaz -------------------
 if __name__ == "__main__":
     interfaz.launch(server_name="0.0.0.0", server_port=7860, share=False)

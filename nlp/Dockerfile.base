@@ -1,26 +1,39 @@
-# Partimos de una imagen ligera de Python 3.9
+# Imagen base ligera con Python 3.9
 FROM python:3.9-slim
 
-# Establecemos el directorio de trabajo dentro del contenedor
+# Establecemos el directorio de trabajo
 WORKDIR /app
 
-# Instalamos compiladores y librerías necesarias para compilar paquetes de Python
+# Evitamos archivos pyc y forzamos logs a stdout
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Instalamos librerías del sistema necesarias para compilar e instalar paquetes NLP
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \              # Compilador C para instalar librerías como spaCy
-    libffi-dev \        # Librería para extensiones en C
-    libssl-dev \        # Librería para conexiones seguras
-    libpq-dev \         # Librería para conexión a PostgreSQL
-    build-essential \   # Herramientas básicas de construcción
-    && rm -rf /var/lib/apt/lists/*  # Limpiar caché de instalación para aligerar la imagen
+    gcc \
+    libffi-dev \
+    libssl-dev \
+    libpq-dev \
+    build-essential \
+    curl \
+    git \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Instalamos las librerías principales para NLP
-RUN pip install --no-cache-dir spacy transformers torch
+# Instalamos librerías clave de NLP
+RUN pip install --upgrade pip && pip install --no-cache-dir \
+    spacy==3.7.2 \
+    transformers==4.39.1 \
+    torch==2.2.2 \
+    pysentimiento==0.5.2
 
-# Descargamos el modelo pequeño de spaCy para español
+# Descargamos modelo pequeño de spaCy para español (es_core_news_sm)
 RUN python -m spacy download es_core_news_sm
 
-# Precargamos el modelo de análisis de sentimiento de Hugging Face
-RUN python -c "from transformers import pipeline; p = pipeline('sentiment-analysis', model='pysentimiento/robertuito-sentiment-analysis')"
+# Precargamos modelo de Hugging Face
+RUN python -c "from transformers import pipeline; pipeline('sentiment-analysis', model='pysentimiento/robertuito-sentiment-analysis')"
 
-# Creamos carpetas de caché para Hugging Face y spaCy
-RUN mkdir -p /root/.cache/huggingface && mkdir -p /root/.cache/spacy
+# Creamos carpetas explícitamente para asegurar cache persistente
+RUN mkdir -p /root/.cache/huggingface /root/.cache/spacy
+
+# Indicamos que esta imagen es para heredar
+CMD ["/bin/bash"]

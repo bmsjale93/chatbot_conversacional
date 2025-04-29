@@ -1,3 +1,6 @@
 test_reports
 nlp/core/__pycache__
 nlp/tests/__pycache__
+nlp/.env
+frontend/.env
+backend/.env

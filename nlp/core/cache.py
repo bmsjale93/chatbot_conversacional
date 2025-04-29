@@ -1,46 +1,64 @@
-# Importamos librerías necesarias
 import redis
 import hashlib
 import json
 import os
-from typing import Optional
+from typing import Optional, Any
 
-# Configuración de conexión a Redis con variables de entorno
+# -------------------- Configuración --------------------
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 
 try:
-    # Intentamos conectar con Redis
-    redis_client = redis.Redis(
+    cache_client = redis.Redis(
         host=REDIS_HOST,
         port=REDIS_PORT,
         decode_responses=True
     )
-    redis_client.ping()  # Verificamos que la conexión funciona
+    cache_client.ping()
 except redis.exceptions.ConnectionError:
-    # Si falla la conexión, desactivamos la caché
-    redis_client = None
-    print("Aviso: No se pudo conectar a Redis. La caché estará deshabilitada.")
+    cache_client = None
+    print("⚠️ Aviso: No se pudo conectar a Redis. La caché estará deshabilitada.")
 
-# Función para consultar la caché
-def obtener_cache(texto: str) -> Optional[dict]:
+# -------------------- Utilidades --------------------
+def generar_clave_cache(texto: str) -> str:
+    """Genera un hash SHA-256 del texto para usar como clave única en la caché."""
+    return hashlib.sha256(texto.encode("utf-8")).hexdigest()
+
+# -------------------- Operaciones de Caché --------------------
+def obtener_cache(texto: str) -> Optional[dict[str, Any]]:
     """
-    Devuelve la respuesta almacenada en caché para el texto dado, si existe.
+    Recupera una respuesta previamente almacenada en caché para un texto dado.
+
+    Args:
+        texto (str): Texto original del mensaje.
+
+    Returns:
+        dict o None: La respuesta almacenada, o None si no existe o hay error.
     """
-    if not redis_client:
+    if not cache_client:
         return None
-    # Usamos SHA-256 para generar una clave única a partir del texto
-    clave = hashlib.sha256(texto.encode()).hexdigest()
-    respuesta = redis_client.get(clave)
-    # Si hay respuesta, la convertimos de JSON a diccionario
-    return json.loads(respuesta) if respuesta else None
+    try:
+        clave = generar_clave_cache(texto)
+        resultado = cache_client.get(clave)
+        return json.loads(resultado) if resultado else None
+    except Exception as e:
+        print(f"⚠️ Error al obtener desde caché: {e}")
+        return None
 
-# Función para guardar una respuesta en la caché
-def guardar_cache(texto: str, resultado: dict, expiracion_segundos: int = 3600):
+
+def guardar_cache(texto: str, resultado: dict, expiracion_segundos: int = 3600) -> None:
     """
-    Guarda el resultado asociado al texto, con expiración por defecto de 1 hora.
+    Almacena una respuesta en la caché, asociada al texto original.
+
+    Args:
+        texto (str): Texto original del mensaje.
+        resultado (dict): Respuesta a guardar.
+        expiracion_segundos (int): Tiempo de expiración en segundos (por defecto 1 hora).
     """
-    if not redis_client:
+    if not cache_client:
         return
-    clave = hashlib.sha256(texto.encode()).hexdigest()
-    redis_client.set(clave, json.dumps(resultado), ex=expiracion_segundos)
+    try:
+        clave = generar_clave_cache(texto)
+        cache_client.set(clave, json.dumps(resultado), ex=expiracion_segundos)
+    except Exception as e:
+        print(f"⚠️ Error al guardar en caché: {e}")

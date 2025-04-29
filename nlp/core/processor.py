@@ -1,44 +1,42 @@
 # Procesamiento de lenguaje natural
 import spacy
-# Importamos NLTK y su módulo de stopwords
 import nltk
 from nltk.corpus import stopwords
+from typing import List
 from core.cleaner import limpiar_texto
 
-# Inicializamos las stopwords de NLTK
+# Inicializamos stopwords de NLTK
 try:
-    _ = stopwords.words('spanish')
+    nltk.data.find("corpora/stopwords")
 except LookupError:
-    # Si no están descargadas, las descargamos
-    nltk.download('stopwords')
+    nltk.download("stopwords")
 
-# Cargamos el modelo de spaCy en español
-nlp = spacy.load("es_core_news_sm")
+stopwords_nltk = set(stopwords.words("spanish"))
+stopwords_personalizadas = {"últimamente", "totalmente"}
+STOPWORDS_TOTALES = stopwords_nltk.union(stopwords_personalizadas)
 
-# Función para preprocesar el texto
-def preprocesar_texto(texto: str) -> list:
+# Cargamos modelo de spaCy
+try:
+    nlp = spacy.load("es_core_news_sm")
+except OSError as e:
+    raise RuntimeError(
+        "❌ Error cargando modelo de spaCy: asegúrate de tener 'es_core_news_sm' instalado.") from e
+
+
+def preprocesar_texto(texto: str) -> List[str]:
     """
-    Limpia el texto, lematiza las palabras, elimina stopwords y puntuación,
+    Limpia el texto, lematiza palabras, elimina stopwords y puntuación,
     y devuelve una lista de tokens útiles.
     """
-    texto_limpio = limpiar_texto(texto)  # Limpieza inicial del texto
-    doc = nlp(texto_limpio)  # Procesamos el texto con spaCy
+    texto_limpio = limpiar_texto(texto)
+    doc = nlp(texto_limpio)
 
-    # Extraemos los lemas de las palabras, ignorando stopwords y signos de puntuación
     tokens = [
-        token.lemma_ for token in doc if not token.is_stop and not token.is_punct
+        token.lemma_ for token in doc
+        if not token.is_stop and not token.is_punct
     ]
 
-    # Conjunto de stopwords en español
-    stopwords_nltk = set(stopwords.words('spanish'))
-
-    # Stopwords personalizadas adicionales
-    stopwords_personalizadas = {"últimamente", "totalmente"}
-
-    # Filtramos los tokens para eliminar stopwords de NLTK y personalizadas
-    tokens_filtrados = [
-        t for t in tokens
-        if t not in stopwords_nltk and t not in stopwords_personalizadas
-    ]
+    # Filtramos stopwords extendidas
+    tokens_filtrados = [t for t in tokens if t not in STOPWORDS_TOTALES]
 
     return tokens_filtrados

@@ -1,16 +1,25 @@
-# Importamos hashlib para generar hashes
 import hashlib
 
-# Función para anonimizar un texto usando SHA-256
+
 def anonimizar_texto(texto: str) -> str:
     """
-    Devuelve un hash SHA-256 del texto original para asegurar la anonimización.
-    """
-    if not texto:
-        # Lanzamos error si el texto está vacío
-        raise ValueError("El texto a anonimizar no puede estar vacío.")
+    Anonimiza un texto utilizando un hash SHA-256.
+    
+    El proceso elimina espacios, convierte todo a minúsculas (para evitar diferencias por capitalización),
+    y genera un hash irrevertible para proteger la identidad del usuario.
 
-    # Normalizamos el texto (eliminamos espacios y pasamos a minúsculas)
-    texto_normalizado = texto.strip().lower()
-    # Generamos y devolvemos el hash
+    Args:
+        texto (str): El texto a anonimizar.
+
+    Returns:
+        str: Hash SHA-256 del texto normalizado.
+
+    Raises:
+        ValueError: Si el texto está vacío o contiene solo espacios.
+    """
+    if not texto.strip():
+        raise ValueError(
+            "El texto a anonimizar no puede estar vacío o contener solo espacios.")
+
+    texto_normalizado = texto.strip().lower()  # Normalizamos para uniformidad
     return hashlib.sha256(texto_normalizado.encode('utf-8')).hexdigest()

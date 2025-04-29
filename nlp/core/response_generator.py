@@ -1,62 +1,64 @@
-# Importamos las funciones necesarias de otros módulos
 from core.emotion_model import analizar_sentimiento
 from core.moderator import contiene_lenguaje_inapropiado
 from core.cache import obtener_cache, guardar_cache
 from core.database import guardar_interaccion
 
-# Función principal para generar una respuesta basada en el estado emocional
-def generar_respuesta(texto: str) -> dict:
-    """
-    Genera una respuesta empática basada en el análisis emocional del mensaje.
-    Utiliza caché para optimizar y guarda cada interacción en la base de datos.
-    Maneja errores internos para asegurar una respuesta válida en todos los casos.
-    """
-    try:
-        # Primero, revisamos si ya existe una respuesta en caché
-        respuesta_cacheada = obtener_cache(texto)
-        if respuesta_cacheada:
-            return respuesta_cacheada
 
-        # Verificamos si el texto contiene lenguaje inapropiado
-        if contiene_lenguaje_inapropiado(texto):
-            respuesta_generada = {
-                "estado_emocional": "alerta",
-                "respuesta": "Hemos detectado lenguaje inapropiado. Por favor, cuida tu expresión para que podamos ayudarte mejor."
-            }
-            guardar_interaccion(
-                texto, respuesta_generada["respuesta"], respuesta_generada["estado_emocional"]
-            )
-            guardar_cache(texto, respuesta_generada)
-            return respuesta_generada
+def generar_respuesta_emocional(estado: str) -> str:
+    """Devuelve una respuesta empática según el estado emocional detectado."""
+    respuestas = {
+        "negativo": "Parece que estás pasando por un momento difícil. Estoy aquí para escucharte. ¿Te gustaría contarme más?",
+        "positivo": "Me alegra saber que te sientes bien. ¿Quieres compartir más sobre eso?",
+        "neutral": "Gracias por compartir cómo te sientes. ¿Quieres contarme algo más?",
+    }
+    return respuestas.get(estado, "Gracias por tu mensaje. ¿Te gustaría seguir hablando?")
 
-        # Analizamos el estado emocional del mensaje
-        resultado_emocion = analizar_sentimiento(texto)
-        estado = resultado_emocion.get("estado_emocional", "neutral")
 
-        # Generamos una respuesta empática según el estado emocional detectado
-        if estado == "negativo":
-            respuesta = "Parece que estás pasando por un momento difícil. Estoy aquí para escucharte. ¿Te gustaría contarme más?"
-        elif estado == "positivo":
-            respuesta = "Me alegra saber que te sientes bien. ¿Quieres compartir más sobre eso?"
-        elif estado == "neutral":
-            respuesta = "Gracias por compartir cómo te sientes. ¿Quieres contarme algo más?"
-        else:
-            respuesta = "Gracias por tu mensaje. ¿Te gustaría seguir hablando?"
-
-        respuesta_generada = {
-            "estado_emocional": estado,
-            "respuesta": respuesta
+def procesar_texto(texto: str) -> dict:
+    """Procesa el texto analizando emoción y generando respuesta empática."""
+    # 1. Moderación
+    if contiene_lenguaje_inapropiado(texto):
+        return {
+            "estado_emocional": "alerta",
+            "respuesta": "Hemos detectado lenguaje inapropiado. Por favor, cuida tu expresión para que podamos ayudarte mejor."
         }
 
+    # 2. Análisis emocional
+    resultado_emocion = analizar_sentimiento(texto)
+    estado = resultado_emocion.get("estado_emocional", "neutral").lower()
+
+    # 3. Generar respuesta
+    return {
+        "estado_emocional": estado,
+        "respuesta": generar_respuesta_emocional(estado)
+    }
+
+
+def generar_respuesta(texto: str) -> dict:
+    """
+    Procesa un mensaje de entrada y genera una respuesta empática.
+    Usa caché si está disponible y guarda toda interacción en la base de datos.
+    """
+    try:
+        # Revisión de caché
+        if (respuesta := obtener_cache(texto)):
+            return respuesta
+
+        # Procesar mensaje
+        respuesta_generada = procesar_texto(texto)
+
+        # Guardar y cachear
         guardar_interaccion(
-            texto, respuesta_generada["respuesta"], respuesta_generada["estado_emocional"]
+            texto,
+            respuesta_generada["respuesta"],
+            respuesta_generada["estado_emocional"]
         )
         guardar_cache(texto, respuesta_generada)
+
         return respuesta_generada
 
     except Exception as e:
-        # Manejo de errores inesperados para evitar caídas del NLP
         return {
             "estado_emocional": "error",
-            "respuesta": f"❌ Error interno: {str(e)}"
+            "respuesta": f"❌ Error interno inesperado: {str(e)}"
         }

@@ -1,20 +1,26 @@
-from typing import Optional
+from typing import Optional, Dict
 
 # Palabras clave consideradas ambiguas
-RESPUESTAS_AMBIGUAS = [
+RESPUESTAS_AMBIGUAS = {
     "no sé", "no lo sé", "no estoy seguro", "quizás", "tal vez",
     "puede ser", "no entiendo", "no sé qué decir", "npi", "ni idea"
-]
+}
 
 
-def detectar_ambiguedad(texto: str) -> bool:
-    """Devuelve True si el texto se considera una respuesta ambigua."""
-    texto = texto.strip().lower()
-    return any(ambigua in texto for ambigua in RESPUESTAS_AMBIGUAS)
+def detectar_ambiguedad(texto: Optional[str]) -> bool:
+    """
+    Devuelve True si el texto se considera una respuesta ambigua.
+    """
+    if not texto:
+        return True  # Consideramos ausencia como ambigüedad
+    texto_normalizado = texto.strip().casefold()
+    return any(ambigua in texto_normalizado for ambigua in RESPUESTAS_AMBIGUAS)
 
 
-def generar_respuesta_aclaratoria(estado_actual: str) -> dict:
-    """Genera una respuesta para pedir aclaración y mantener el mismo estado."""
+def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
+    """
+    Genera una respuesta para pedir aclaración al usuario manteniendo el mismo estado.
+    """
     return {
         "estado": estado_actual,
         "mensaje": (
@@ -27,11 +33,15 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> dict:
 
 
 def generar_respuesta_empatica(mensaje_base: str, tipo: str = "tristeza") -> str:
-    """Agrega una frase empática al inicio del mensaje base según el tipo emocional."""
-    frases = {
+    """
+    Agrega una frase empática al inicio del mensaje base según el tipo emocional.
+    """
+    frases_empaticas = {
         "tristeza": "Lamento que te sientas así, compartirlo ya es un primer paso importante. ",
         "ansiedad": "Entiendo que puede ser difícil hablar de esto. ",
         "enojo": "Gracias por expresar cómo te sientes. ",
+        "neutral": "Gracias por compartir cómo te sientes. ",
+        "positivo": "¡Qué bueno que te sientas bien! ",
     }
-    frase_empatica = frases.get(tipo, "")
-    return f"{frase_empatica}{mensaje_base}"
+    frase_intro = frases_empaticas.get(tipo, "")
+    return f"{frase_intro}{mensaje_base}"
