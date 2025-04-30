@@ -22,7 +22,7 @@ def limpiar_texto(texto: Optional[str]) -> str:
         return ""
 
     # Normalización unicode para tratar tildes y caracteres especiales de forma consistente
-    texto = unicodedata.normalize("NFC", texto)
+    texto = unicodedata.normalize("NFKC", texto)
 
     texto = texto.lower()                         # Todo a minúsculas
     texto = PATRON_URL.sub("", texto)             # Eliminar URLs

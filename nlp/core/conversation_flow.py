@@ -21,6 +21,8 @@ from core.empathy_utils import (
     generar_respuesta_empatica
 )
 from core.database import guardar_interaccion_completa
+from core.cleaner import limpiar_texto
+from utils.extract_name import extraer_nombre
 
 # Constantes de estado
 FIN = "fin"
@@ -58,7 +60,8 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
 
     # --- Consentimiento ---
     if estado_actual == "consentimiento":
-        intencion = detectar_intencion(texto_usuario)
+        texto_limpio = limpiar_texto(texto_usuario)
+        intencion = detectar_intencion(texto_limpio)
         if intencion == "afirmativo":
             respuesta = obtener_mensaje_nombre()
             respuesta["estado"] = "preguntar_nombre"
@@ -76,7 +79,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
 
     # --- Preguntar nombre ---
     if estado_actual == "preguntar_nombre":
-        nombre_usuario = texto_usuario.strip()
+        nombre_usuario = extraer_nombre(texto_usuario)
         datos_guardados["nombre_usuario"] = nombre_usuario
         registrar_interaccion(session_id, estado_actual,
                               "¿Con qué nombre o seudónimo puedo dirigirme a ti?", texto_usuario)
