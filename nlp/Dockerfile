@@ -44,4 +44,4 @@ COPY . .
 EXPOSE 8001
 
 # Comando para iniciar la API
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8001"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8001", "--log-level", "debug"]

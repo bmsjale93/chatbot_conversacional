@@ -1,4 +1,5 @@
 import httpx
+import traceback
 from app.models.message import Message
 from app.config import NLP_GESTIONAR_URL  # Se mueve la URL a config
 
@@ -13,17 +14,28 @@ async def analizar_mensaje(mensaje: Message) -> dict:
     }
 
     try:
+        print("[DEBUG] Enviando payload al NLP:",
+              payload)  # Log antes del request
+
         async with httpx.AsyncClient(timeout=5.0) as client:
             response = await client.post(NLP_GESTIONAR_URL, json=payload)
             response.raise_for_status()
-            return response.json()
+
+            json_data = response.json()
+            print("[DEBUG] Respuesta recibida del NLP:",
+                  json_data)  # Log de respuesta NLP
+
+            return json_data
 
     except (httpx.RequestError, httpx.HTTPStatusError) as e:
         error_msg = "Error de conexión con el NLP" if isinstance(
             e, httpx.RequestError) else "Error HTTP desde NLP"
+        print(f"[ERROR NLP] {error_msg}: {str(e)}")  # Log del error específico
         return _respuesta_error(f"{error_msg}: {str(e)}")
 
     except Exception as e:
+        print("[ERROR NLP] Excepción inesperada al analizar mensaje:")
+        traceback.print_exc()  # Traza completa del error
         return _respuesta_error(f"Error inesperado procesando respuesta: {str(e)}")
 
 
