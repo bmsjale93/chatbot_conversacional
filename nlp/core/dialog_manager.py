@@ -97,10 +97,10 @@ def obtener_mensaje_intensidad_tristeza() -> dict:
     return {
         "estado": "intensidad_tristeza",
         "mensaje": (
-            "Por último, ¿qué tan intensa suele ser esa tristeza cuando aparece?\n\n"
-            "Por favor, indícalo en una escala del 1 (poco intensa) al 10 (muy intensa).\n"
-            "Puedes escribir, por ejemplo: '3', '7', '10'."
+            "Por último, ¿cómo describirías la intensidad de esa tristeza cuando aparece?\n\n"
+            "Puedes usar una escala del 1 (muy leve) al 10 (muy intensa), o expresarlo de forma aproximada, como:\n"
+            "'Creo que un 3', 'Más o menos un 7', 'Entre 8 y 9', etc."
         ),
         "modo_entrada": "texto_libre",
-        "sugerencias": ["3", "7", "10"]
+        "sugerencias": ["3", "5", "8", "10"]
     }

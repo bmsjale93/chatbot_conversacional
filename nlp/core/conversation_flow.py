@@ -217,24 +217,37 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
                             "¿Cuánto tiempo dura generalmente esa tristeza?", texto_usuario)
 
         respuesta = obtener_mensaje_intensidad_tristeza()
-        respuesta["estado"] = "preguntar_intensidad"
+        respuesta["estado"] = "intensidad_tristeza"
         return respuesta, datos_guardados
 
 
     # --- Preguntar intensidad ---
-    if estado_actual == "preguntar_intensidad":
-        if detectar_ambiguedad(texto_usuario):
+    if estado_actual == "intensidad_tristeza":
+        texto_limpio = limpiar_texto(texto_usuario)
+
+        if detectar_ambiguedad(texto_limpio):
             return generar_respuesta_aclaratoria(estado_actual), datos_guardados
 
         datos_guardados["intensidad_tristeza"] = texto_usuario
-        asignar_puntuacion(session_id, "intensidad", texto_usuario)
+        asignar_puntuacion(session_id, "intensidad", texto_limpio)
         registrar_interaccion(session_id, estado_actual,
                               "Cuando sientes tristeza, ¿cómo de intensa es?", texto_usuario)
 
+        # En lugar de esperar una nueva entrada, pasamos directamente al resumen
+        resumen = generar_resumen_evaluacion(session_id)
+        datos_guardados["resumen"] = resumen
+
+        mensaje = (
+            f"🔍 **Resumen de evaluación emocional:**\n"
+            f"- Perfil detectado: {resumen['evaluacion'].capitalize()}\n"
+            f"- Puntuación acumulada: {resumen['perfil_emocional'].get('total', 0)}\n\n"
+            "¿Te gustaría valorar cómo te has sentido conversando conmigo? (0 = nada empático, 10 = muy empático)"
+        )
+
         respuesta = {
-            "estado": "mostrar_resumen",
-            "mensaje": "Gracias por compartir cómo te has sentido. Estoy generando un resumen de tu estado emocional...",
-            "modo_entrada": "texto_libre",
+            "estado": "preguntar_empatia",
+            "mensaje": mensaje,
+            "modo_entrada": "numero",
             "sugerencias": []
         }
         return respuesta, datos_guardados

@@ -106,6 +106,19 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
             "sugerencias": ["Unas horas", "Dos días", "Semanas"]
         }
 
+    if estado_actual == "intensidad_tristeza":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "Entiendo que a veces puede ser complicado ponerle un número exacto a lo que sentimos.\n\n"
+                "Solo necesito una idea general de cuán intensa es tu tristeza cuando aparece. "
+                "Puedes indicarlo usando una escala del 1 (muy leve) al 10 (muy intensa), o algo aproximado como: "
+                "'Creo que un 4' o 'más o menos un 7'."
+            ),
+            "modo_entrada": "texto_libre",
+            "sugerencias": ["1", "5", "10"]
+        }
+
     return {
         "estado": estado_actual,
         "mensaje": (
@@ -115,7 +128,6 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
         "modo_entrada": "texto_libre",
         "sugerencias": []
     }
-
 # -------------------- Mensajes empáticos --------------------
 
 def generar_respuesta_empatica(mensaje_base: str, tipo: str = "tristeza") -> str:
