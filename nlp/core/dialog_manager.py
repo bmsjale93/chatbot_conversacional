@@ -1,4 +1,3 @@
-# nlp/core/dialog_manager.py
 # Funciones que controlan los mensajes y las fases del asistente virtual
 
 # -------------------- Fase de Presentación --------------------

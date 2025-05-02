@@ -13,4 +13,4 @@ docker build -t nlp-base:latest -f Dockerfile.base . || { echo "❌ Fallo constr
 cd ..
 
 echo "🚀 Levantando todos los servicios con Docker Compose..."
-docker compose up --build
+docker compose up --build -d

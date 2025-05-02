@@ -90,7 +90,29 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
 
     # --- Preguntar identidad ---
     if estado_actual == "preguntar_identidad":
-        identidad = texto_usuario.strip().lower()
+        from core.empathy_utils import detectar_ambiguedad_identidad
+
+        texto_limpio = texto_usuario.strip().lower()
+
+        if detectar_ambiguedad_identidad(texto_limpio):
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        # Mapear respuestas comunes a etiquetas válidas
+        MAPEO_IDENTIDAD = {
+            "masculino": "masculino",
+            "hombre": "masculino",
+            "femenino": "femenino",
+            "mujer": "femenino",
+            "no binario": "no binario",
+            "nobinario": "no binario",
+            "no-binario": "no binario"
+        }
+
+        identidad = MAPEO_IDENTIDAD.get(texto_limpio)
+
+        if identidad is None:
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
         datos_guardados["identidad"] = identidad
         registrar_interaccion(session_id, estado_actual,
                               "¿Qué etiqueta identifica mejor tu identidad?", texto_usuario)
@@ -99,6 +121,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         respuesta = obtener_mensaje_exploracion_tristeza(nombre)
         respuesta["estado"] = "inicio_exploracion_tristeza"
         return respuesta, datos_guardados
+
 
     # --- Inicio de exploración emocional (tristeza) ---
     if estado_actual == "inicio_exploracion_tristeza":
