@@ -185,31 +185,41 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
 
     # --- Preguntar frecuencia de tristeza ---
     if estado_actual == "preguntar_frecuencia":
-        if detectar_ambiguedad(texto_usuario):
+        texto_limpio = limpiar_texto(texto_usuario)
+
+        if detectar_ambiguedad(texto_limpio):
             return generar_respuesta_aclaratoria(estado_actual), datos_guardados
 
         datos_guardados["frecuencia_tristeza"] = texto_usuario
-        asignar_puntuacion(session_id, "frecuencia", texto_usuario)
-        registrar_interaccion(session_id, estado_actual,
-                              "¿Con qué frecuencia sueles experimentar tristeza?", texto_usuario)
+        asignar_puntuacion(session_id, "frecuencia", texto_limpio)
+        registrar_interaccion(
+            session_id,
+            estado_actual,
+            "¿Con qué frecuencia sueles experimentar tristeza?",
+            texto_usuario
+        )
 
         respuesta = obtener_mensaje_duracion_tristeza()
         respuesta["estado"] = "preguntar_duracion"
         return respuesta, datos_guardados
 
+
     # --- Preguntar duración ---
     if estado_actual == "preguntar_duracion":
-        if detectar_ambiguedad(texto_usuario):
+        texto_limpio = limpiar_texto(texto_usuario)
+
+        if detectar_ambiguedad(texto_limpio):
             return generar_respuesta_aclaratoria(estado_actual), datos_guardados
 
         datos_guardados["duracion_tristeza"] = texto_usuario
-        asignar_puntuacion(session_id, "duracion", texto_usuario)
+        asignar_puntuacion(session_id, "duracion", texto_limpio)
         registrar_interaccion(session_id, estado_actual,
-                              "¿Cuánto tiempo dura generalmente esa tristeza?", texto_usuario)
+                            "¿Cuánto tiempo dura generalmente esa tristeza?", texto_usuario)
 
         respuesta = obtener_mensaje_intensidad_tristeza()
         respuesta["estado"] = "preguntar_intensidad"
         return respuesta, datos_guardados
+
 
     # --- Preguntar intensidad ---
     if estado_actual == "preguntar_intensidad":

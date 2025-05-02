@@ -31,7 +31,6 @@ PATRONES_AMBIGUOS = [
     re.compile(r"\bdifícil\s+de\s+decir\b", re.IGNORECASE),
 ]
 
-
 def detectar_ambiguedad(texto: Optional[str]) -> bool:
     """
     Devuelve True si el texto se considera una respuesta ambigua.
@@ -41,21 +40,15 @@ def detectar_ambiguedad(texto: Optional[str]) -> bool:
 
     texto_original = texto.strip().lower()
 
-    # 1. Coincidencia exacta
     if texto_original in RESPUESTAS_AMBIGUAS:
         return True
 
-    # 2. Patrones amplios con expresiones comunes
     if any(p.search(texto_original) for p in PATRONES_AMBIGUOS):
         return True
 
-    # 3. Tokens de procesamiento lematizado
     texto_limpio = limpiar_texto(texto_original)
     tokens = preprocesar_texto(texto_limpio)
-    if any(token in PALABRAS_CLAVE_AMBIGUAS for token in tokens):
-        return True
-
-    return False
+    return any(token in PALABRAS_CLAVE_AMBIGUAS for token in tokens)
 
 # -------------------- Mensajes de aclaración --------------------
 
@@ -88,6 +81,30 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
             "sugerencias": ["Sí, me he sentido triste", "No, me he sentido bien", "No estoy seguro"]
         }
 
+    if estado_actual == "preguntar_frecuencia":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "No te preocupes si no puedes dar una respuesta exacta.\n\n"
+                "Cuando te preguntaba por la frecuencia con la que sientes tristeza, me refería a si ocurre todos los días, algunas veces por semana, "
+                "solo ocasionalmente o muy rara vez.\n\n"
+                "¿Cómo describirías la frecuencia con la que sientes tristeza últimamente?"
+            ),
+            "modo_entrada": "texto_libre",
+            "sugerencias": ["Todos los días", "A menudo", "De vez en cuando", "Rara vez"]
+        }
+
+    if estado_actual == "preguntar_duracion":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "Gracias por compartirlo. Sé que a veces puede ser difícil precisar exactamente cuánto tiempo dura la tristeza.\n\n"
+                "Solo necesito una idea general: ¿suele durar unos minutos, unas horas, varios días o incluso semanas?\n\n"
+                "Puedes responder, por ejemplo: 'Unas horas', 'Dos días', 'Semanas', etc."
+            ),
+            "modo_entrada": "texto_libre",
+            "sugerencias": ["Unas horas", "Dos días", "Semanas"]
+        }
 
     return {
         "estado": estado_actual,
@@ -110,7 +127,7 @@ def generar_respuesta_empatica(mensaje_base: str, tipo: str = "tristeza") -> str
         "ansiedad": "Entiendo que puede ser difícil hablar de esto. ",
         "enojo": "Gracias por expresar cómo te sientes. ",
         "neutral": "Gracias por compartir cómo te sientes. ",
-        "positivo": "¡Qué bueno que te sientas bien! ",
+        "positivo": "Qué bueno que te sientas bien. ",
     }
     frase_intro = frases_empaticas.get(tipo, "")
     return f"{frase_intro}{mensaje_base}"
@@ -123,7 +140,6 @@ RESPUESTAS_AMBIGUAS_IDENTIDAD = {
     "sin definir", "no definido", "indefinido", "sin género", "sin genero",
     "sin identidad", "no quiero responder", "no sé qué soy"
 }
-
 
 def detectar_ambiguedad_identidad(texto: Optional[str]) -> bool:
     """
