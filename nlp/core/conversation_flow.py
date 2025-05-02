@@ -233,14 +233,37 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         registrar_interaccion(session_id, estado_actual,
                               "Cuando sientes tristeza, ¿cómo de intensa es?", texto_usuario)
 
-        # En lugar de esperar una nueva entrada, pasamos directamente al resumen
+        # Generar resumen de evaluación (media)
         resumen = generar_resumen_evaluacion(session_id)
         datos_guardados["resumen"] = resumen
 
+        media = resumen["perfil_emocional"].get("media", 0)
+        perfil = resumen["evaluacion"].capitalize()
+
+        # Mensaje personalizado por perfil
+        if resumen["evaluacion"] == "leve":
+            mensaje_extra = (
+                "Tu nivel actual de tristeza parece ser bajo o puntual. Esto indica que, en general, estás gestionando tus emociones de forma saludable.\n\n"
+                "Mantén esos hábitos positivos que te ayudan a mantener el equilibrio emocional, y no dudes en darte espacio para sentir y reflexionar cuando lo necesites."
+            )
+        elif resumen["evaluacion"] == "moderado":
+            mensaje_extra = (
+                "Tu nivel de tristeza es moderado. Es normal atravesar etapas así, y lo importante es que estás prestando atención a tu bienestar.\n\n"
+                "Considera dedicar tiempo a actividades que te aporten calma, rodearte de personas de confianza y, si lo necesitas, expresar lo que sientes sin juzgarte.\n"
+                "Reconocer tus emociones es un paso valiente hacia el cuidado personal."
+            )
+        else:
+            mensaje_extra = (
+                "Tu nivel de tristeza actual es alto, lo cual puede estar generando un malestar significativo en tu día a día.\n\n"
+                "Recuerda que no estás solo/a: hablar con un profesional puede ayudarte a entender mejor lo que estás atravesando y darte herramientas para afrontarlo.\n"
+                "Buscar apoyo no es signo de debilidad, sino un acto de fortaleza y autocuidado. Tu bienestar es importante."
+            )
+
         mensaje = (
             f"🔍 **Resumen de evaluación emocional:**\n"
-            f"- Perfil detectado: {resumen['evaluacion'].capitalize()}\n"
-            f"- Puntuación acumulada: {resumen['perfil_emocional'].get('total', 0)}\n\n"
+            f"- Perfil detectado: {perfil}\n"
+            f"- Puntuación emocional media: {media}/10\n\n"
+            f"{mensaje_extra}\n\n"
             "¿Te gustaría valorar cómo te has sentido conversando conmigo? (0 = nada empático, 10 = muy empático)"
         )
 

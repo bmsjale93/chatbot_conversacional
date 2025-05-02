@@ -1,9 +1,12 @@
 import redis
 import os
 import json
+import re
+from typing import Optional
 from core.cleaner import limpiar_texto
 
-# Configuración de Redis
+# -------------------- Configuración de Redis --------------------
+
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 
@@ -15,63 +18,65 @@ except redis.exceptions.ConnectionError:
     redis_client = None
     print("⚠️ Redis no disponible. Puntuaciones no serán almacenadas.")
 
-# -------------------- Diccionarios de puntuación extendidos --------------------
+# -------------------- Diccionarios de patrones --------------------
 
 FRECUENCIA_PATRONES = {
-    3: [
+    9: [
         "todos los días", "cada día", "diariamente", "a diario", "casi todos los días",
         "día tras día", "sin falta", "todos los santos días"
     ],
-    2: [
+    6: [
         "muy seguido", "a menudo", "frecuentemente", "varias veces por semana",
         "de vez en cuando", "ocasionalmente", "algunas veces", "algunos días",
         "bastantes días", "la mayoría de los días", "con frecuencia", "muchos días"
     ],
-    1: [
+    3: [
         "rara vez", "pocas veces", "casi nunca", "nunca", "muy pocas veces",
         "alguna vez", "en contadas ocasiones"
     ]
 }
 
-
 DURACION_PATRONES = {
-    3: [
+    9: [
         "semanas", "una semana", "más de una semana", "muchos días",
         "varias semanas", "largos periodos", "mucho tiempo", "durante semanas"
     ],
-    2: [
+    6: [
         "días", "varios días", "uno o dos días", "algunos días",
         "un par de días", "durante días"
     ],
-    1: [
+    3: [
         "horas", "un par de horas", "unas horas", "minutos", "media hora",
         "rato", "corto tiempo", "instantes", "momentos", "breve"
     ]
 }
 
-
 # -------------------- Funciones de cálculo --------------------
 
 def buscar_valor_aproximado(valor_usuario: str, patrones: dict) -> int:
+    valor_usuario = valor_usuario.lower().strip()
     for puntuacion, expresiones in patrones.items():
         for expresion in expresiones:
             if expresion in valor_usuario:
                 return puntuacion
-    return 1
+    return 3  # Por defecto
 
 def calcular_puntuacion(tipo: str, valor: str) -> int:
-    valor_limpio = limpiar_texto(valor)
+    valor_normalizado = limpiar_texto(valor.lower().strip())
 
-    if tipo == "frecuencia":
-        return buscar_valor_aproximado(valor_limpio, FRECUENCIA_PATRONES)
+    if tipo == "intensidad":
+        coincidencias = re.findall(r"\b([1-9]|10)\b", valor_normalizado)
+        if coincidencias:
+            n = int(coincidencias[0])
+            return 9 if n >= 8 else 6 if n >= 4 else 3
+        return 3
+
+    elif tipo == "frecuencia":
+        return buscar_valor_aproximado(valor_normalizado, FRECUENCIA_PATRONES)
+
     elif tipo == "duracion":
-        return buscar_valor_aproximado(valor_limpio, DURACION_PATRONES)
-    elif tipo == "intensidad":
-        try:
-            n = int(valor.strip())
-            return 1 if n <= 3 else 2 if n <= 7 else 3
-        except ValueError:
-            return 1
+        return buscar_valor_aproximado(valor_normalizado, DURACION_PATRONES)
+
     return 0
 
 # -------------------- Gestión de puntuaciones --------------------
@@ -92,9 +97,16 @@ def asignar_puntuacion(session_id: str, tipo: str, valor: str):
     puntos = calcular_puntuacion(tipo, valor)
 
     puntuaciones[tipo] = puntos
-    puntuaciones["total"] = sum(
-        v for k, v in puntuaciones.items() if k != "total"
-    )
+
+    # Calcular media si están presentes al menos dos valores
+    valores = [
+        puntuaciones.get("frecuencia"),
+        puntuaciones.get("duracion"),
+        puntuaciones.get("intensidad")
+    ]
+    valores_validos = [v for v in valores if isinstance(v, int)]
+
+    puntuaciones["media"] = round(sum(valores_validos) / len(valores_validos), 2) if valores_validos else 0
 
     redis_client.set(key, json.dumps(puntuaciones), ex=3600)
 
@@ -104,11 +116,11 @@ def eliminar_puntuaciones(session_id: str):
 
 def generar_resumen_evaluacion(session_id: str) -> dict:
     puntuaciones = obtener_puntuaciones(session_id)
-    total = puntuaciones.get("total", 0)
+    media = puntuaciones.get("media", 0)
 
-    if total <= 3:
+    if media <= 3.5:
         evaluacion = "leve"
-    elif total <= 6:
+    elif media <= 6.5:
         evaluacion = "moderado"
     else:
         evaluacion = "grave"
