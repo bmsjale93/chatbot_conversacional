@@ -24,6 +24,8 @@ from core.empathy_utils import (
 from core.database import guardar_interaccion_completa
 from core.cleaner import limpiar_texto
 from utils.extract_name import extraer_nombre
+import re
+
 
 # Constantes de estado
 FIN = "fin"
@@ -297,27 +299,49 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
 
     # --- Preguntar valoración de empatía ---
     if estado_actual == "preguntar_empatia":
-        try:
-            empatia = int(texto_usuario.strip())
-            empatia = max(0, min(empatia, 10))
-        except (ValueError, TypeError):
-            empatia = 5  # Valor por defecto si no es válido
+        texto_limpio = limpiar_texto(texto_usuario)
+
+        if detectar_ambiguedad(texto_limpio):
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        coincidencias = re.findall(r"\b([0-9]|10)\b", texto_limpio)
+        if coincidencias:
+            try:
+                empatia = int(coincidencias[0])
+                empatia = max(0, min(empatia, 10))
+            except ValueError:
+                empatia = 5
+        else:
+            # En caso de ambigüedad no numérica
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
 
         datos_guardados["valoracion_empatia"] = empatia
 
         resumen = datos_guardados.get("resumen", {})
         riesgo = resumen.get("evaluacion") == "grave"
 
-        mensaje_final = (
-            "Gracias por tu participación. "
-            "Recuerda que buscar ayuda es un acto de valentía. Estoy aquí para apoyarte."
-        )
+        if empatia >= 8:
+            mensaje_final = (
+                "Me alegra mucho saber que te has sentido acompañado/a durante esta conversación. "
+                "Tu bienestar importa, y estoy aquí siempre que necesites hablar. "
+                "Gracias por confiar en este espacio."
+            )
+        elif empatia >= 5:
+            mensaje_final = (
+                "Gracias por tu valoración. Me esforzaré en seguir mejorando para ofrecerte una experiencia más empática y cercana. "
+                "Recuerda que siempre estaré disponible si deseas volver a hablar."
+            )
+        else:
+            mensaje_final = (
+                "Lamento que esta experiencia no haya sido tan empática como esperabas. "
+                "Tu opinión es valiosa para mejorar este espacio de escucha y apoyo. "
+                "Gracias por haber participado con sinceridad."
+            )
 
         if riesgo:
             mensaje_final = (
                 "📢 *Detectamos un posible nivel elevado de malestar.*\n"
-                "Te recomendamos que hables con un profesional de la salud mental.\n\n"
-                + mensaje_final
+                "Te recomendamos que hables con un profesional de la salud mental.\n\n" + mensaje_final
             )
 
         respuesta = {
@@ -327,6 +351,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             "sugerencias": []
         }
         return respuesta, datos_guardados
+
 
     # --- Fallback de error ---
     respuesta = {

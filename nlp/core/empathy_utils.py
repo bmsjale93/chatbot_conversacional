@@ -118,6 +118,19 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
             "modo_entrada": "texto_libre",
             "sugerencias": ["1", "5", "10"]
         }
+    
+    if estado_actual == "preguntar_empatia":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "Está bien si no tienes un número exacto ahora mismo.\n\n"
+                "¿Podrías indicarme aproximadamente cómo te has sentido durante esta conversación conmigo?\n"
+                "Utiliza una escala del 0 (nada empático) al 10 (muy empático), o una expresión como:\n"
+                "'Más o menos un 6', 'Creo que un 7', 'Entre 4 y 5'."
+            ),
+            "modo_entrada": "texto_libre",
+            "sugerencias": ["3", "6", "10"]
+        }
 
     return {
         "estado": estado_actual,
