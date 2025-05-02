@@ -63,7 +63,7 @@ def obtener_mensaje_exploracion_tristeza(nombre_usuario: str) -> dict:
             "Puedes responder libremente, como por ejemplo: 'Sí, me he sentido muy triste' o 'No, en general he estado bien'."
         ),
         "modo_entrada": "texto_libre",
-        "sugerencias": ["Sí", "No"]
+        "sugerencias": ["Sí, me he sentido triste", "No, me he sentido bien", "No estoy seguro"]
     }
 
 # -------------------- Exploración: Frecuencia --------------------

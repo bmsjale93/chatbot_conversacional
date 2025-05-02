@@ -18,7 +18,8 @@ from core.score_manager import (
 from core.empathy_utils import (
     detectar_ambiguedad,
     generar_respuesta_aclaratoria,
-    generar_respuesta_empatica
+    generar_respuesta_empatica,
+    detectar_ambiguedad_identidad
 )
 from core.database import guardar_interaccion_completa
 from core.cleaner import limpiar_texto
@@ -125,13 +126,42 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
 
     # --- Inicio de exploración emocional (tristeza) ---
     if estado_actual == "inicio_exploracion_tristeza":
-        if detectar_ambiguedad(texto_usuario):
+
+        texto_limpio = limpiar_texto(texto_usuario)
+
+        if detectar_ambiguedad(texto_limpio):
             return generar_respuesta_aclaratoria(estado_actual), datos_guardados
 
-        intencion = detectar_intencion(texto_usuario)
-        registrar_interaccion(session_id, estado_actual,
-                              "¿Has experimentado tristeza recientemente?", texto_usuario)
+        # 2. Clasificar respuesta explícita si es posible
+        respuestas_positivas = {
+            "sí", "si", "sí últimamente", "sí actualmente", "sí me he sentido triste",
+            "me siento triste", "últimamente sí", "sí he estado mal", "sí algo"
+        }
+        respuestas_negativas = {
+            "no", "no últimamente", "no me siento triste", "no ahora", "en general estoy bien",
+            "he estado bien", "no no realmente", "no especialmente"
+        }
 
+        intencion = None
+        for afirmativa in respuestas_positivas:
+            if afirmativa in texto_limpio:
+                intencion = "afirmativo"
+                break
+        if not intencion:
+            for negativa in respuestas_negativas:
+                if negativa in texto_limpio:
+                    intencion = "negativo"
+                    break
+
+        # 3. Si no hay coincidencia exacta, usar modelo de detección
+        if not intencion:
+            intencion = detectar_intencion(texto_limpio)
+
+        # 4. Registrar la interacción
+        registrar_interaccion(session_id, estado_actual,
+                            "¿Has experimentado tristeza recientemente?", texto_usuario)
+
+        # 5. Responder según intención
         if intencion == "afirmativo":
             respuesta = obtener_mensaje_frecuencia_tristeza()
             respuesta["estado"] = "preguntar_frecuencia"
@@ -140,15 +170,18 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         elif intencion == "negativo":
             respuesta = {
                 "estado": FIN,
-                "mensaje": "¡Me alegra saberlo! Parece que no estás experimentando tristeza en estos momentos. Gracias por tu participación.",
+                "mensaje": (
+                    "¡Me alegra saberlo! Parece que no estás experimentando tristeza en estos momentos. "
+                    "Gracias por tu participación."
+                ),
                 "modo_entrada": "fin",
                 "sugerencias": []
             }
         else:
-            nombre = datos_guardados.get("nombre_usuario", "")
-            respuesta = obtener_mensaje_exploracion_tristeza(nombre)
-            respuesta["estado"] = "inicio_exploracion_tristeza"
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
         return respuesta, datos_guardados
+
 
     # --- Preguntar frecuencia de tristeza ---
     if estado_actual == "preguntar_frecuencia":
