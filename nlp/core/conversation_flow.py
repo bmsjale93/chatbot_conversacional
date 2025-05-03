@@ -1,14 +1,7 @@
 from typing import Tuple
 
-from core.dialog_manager import (
-    obtener_mensaje_presentacion,
-    obtener_mensaje_nombre,
-    obtener_mensaje_identidad,
-    obtener_mensaje_exploracion_tristeza,
-    obtener_mensaje_frecuencia_tristeza,
-    obtener_mensaje_duracion_tristeza,
-    obtener_mensaje_intensidad_tristeza
-)
+from core import dialog_manager
+
 from core.intent_detector import detectar_intencion
 from core.score_manager import (
     asignar_puntuacion,
@@ -57,7 +50,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
 
     # --- Fase de presentación ---
     if estado_actual == "presentacion":
-        respuesta = obtener_mensaje_presentacion()
+        respuesta = dialog_manager.obtener_mensaje_presentacion()
         respuesta["estado"] = "consentimiento"
         return respuesta, datos_guardados
 
@@ -66,7 +59,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         texto_limpio = limpiar_texto(texto_usuario)
         intencion = detectar_intencion(texto_limpio)
         if intencion == "afirmativo":
-            respuesta = obtener_mensaje_nombre()
+            respuesta = dialog_manager.obtener_mensaje_nombre()
             respuesta["estado"] = "preguntar_nombre"
         elif intencion == "negativo":
             respuesta = {
@@ -76,7 +69,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
                 "sugerencias": []
             }
         else:
-            respuesta = obtener_mensaje_presentacion()
+            respuesta = dialog_manager.obtener_mensaje_presentacion()
             respuesta["estado"] = "consentimiento"
         return respuesta, datos_guardados
 
@@ -87,14 +80,12 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         registrar_interaccion(session_id, estado_actual,
                               "¿Con qué nombre o seudónimo puedo dirigirme a ti?", texto_usuario)
 
-        respuesta = obtener_mensaje_identidad(nombre_usuario)
+        respuesta = dialog_manager.obtener_mensaje_identidad(nombre_usuario)
         respuesta["estado"] = "preguntar_identidad"
         return respuesta, datos_guardados
 
     # --- Preguntar identidad ---
     if estado_actual == "preguntar_identidad":
-        from core.empathy_utils import detectar_ambiguedad_identidad
-
         texto_limpio = texto_usuario.strip().lower()
 
         if detectar_ambiguedad_identidad(texto_limpio):
@@ -121,7 +112,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
                               "¿Qué etiqueta identifica mejor tu identidad?", texto_usuario)
 
         nombre = datos_guardados.get("nombre_usuario", "")
-        respuesta = obtener_mensaje_exploracion_tristeza(nombre)
+        respuesta = dialog_manager.obtener_mensaje_exploracion_tristeza(nombre)
         respuesta["estado"] = "inicio_exploracion_tristeza"
         return respuesta, datos_guardados
 
@@ -165,7 +156,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
 
         # 5. Responder según intención
         if intencion == "afirmativo":
-            respuesta = obtener_mensaje_frecuencia_tristeza()
+            respuesta = dialog_manager.obtener_mensaje_frecuencia_tristeza()
             respuesta["estado"] = "preguntar_frecuencia"
             respuesta["mensaje"] = generar_respuesta_empatica(
                 respuesta["mensaje"], tipo="tristeza")
@@ -201,7 +192,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             texto_usuario
         )
 
-        respuesta = obtener_mensaje_duracion_tristeza()
+        respuesta = dialog_manager.obtener_mensaje_duracion_tristeza()
         respuesta["estado"] = "preguntar_duracion"
         return respuesta, datos_guardados
 
@@ -218,7 +209,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         registrar_interaccion(session_id, estado_actual,
                             "¿Cuánto tiempo dura generalmente esa tristeza?", texto_usuario)
 
-        respuesta = obtener_mensaje_intensidad_tristeza()
+        respuesta = dialog_manager.obtener_mensaje_intensidad_tristeza()
         respuesta["estado"] = "intensidad_tristeza"
         return respuesta, datos_guardados
 
@@ -236,17 +227,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
                               "Cuando sientes tristeza, ¿cómo de intensa es?", texto_usuario)
 
         # Transición directa al siguiente bloque sin mostrar resumen
-        respuesta = {
-            "estado": "preguntar_anhedonia",
-            "mensaje": (
-                "Gracias por compartir cómo ha sido la intensidad de esa tristeza.\n\n"
-                "Ahora me gustaría preguntarte sobre otras experiencias que pueden estar relacionadas con el estado de ánimo."
-                "\n\nA veces, lo que antes disfrutábamos deja de parecernos interesante o emocionante."
-                "\n\n¿Has notado si en los últimos días has perdido el interés o el placer en algunas actividades que solías disfrutar?"
-            ),
-            "modo_entrada": "texto_libre",
-            "sugerencias": ["Sí, me ha pasado", "No, sigo disfrutando", "No estoy seguro"]
-        }
+        respuesta = dialog_manager.obtener_mensaje_anhedonia()
         return respuesta, datos_guardados
 
     # ------- APARTADO ANHEDONIA ---------
@@ -264,15 +245,8 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
 
         if intencion == "afirmativo":
             datos_guardados["anhedonia"] = True
-            respuesta = {
-                "estado": "detalle_anhedonia",
-                "mensaje": (
-                    "Gracias por tu sinceridad. Es importante reconocer estos cambios.\n\n"
-                    "¿Podrías contarme qué actividades has dejado de disfrutar recientemente?"
-                ),
-                "modo_entrada": "texto_libre",
-                "sugerencias": ["Salir con amigos", "Escuchar música", "Hacer ejercicio"]
-            }
+            respuesta = dialog_manager.obtener_mensaje_anhedonia_profunda()
+
 
         elif intencion == "negativo":
             datos_guardados["anhedonia"] = False
@@ -297,22 +271,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
 
         datos_guardados["actividades_sin_disfrute"] = texto_usuario
 
-        respuesta = {
-            "estado": "preguntar_desesperanza",
-            "mensaje": (
-                "Gracias por contármelo. Tener en cuenta qué cosas han perdido interés puede aportar mucha información.\n\n"
-                "Ahora me gustaría preguntarte algo más.\n\n"
-                "Cuando piensas en el futuro, ¿te resulta difícil encontrar algo que te ilusione o motive?\n\n"
-                "Puedes responder con sinceridad, por ejemplo: 'Sí, últimamente nada me motiva' o 'No, tengo cosas que me ilusionan'."
-            ),
-            "modo_entrada": "texto_libre",
-            "sugerencias": [
-                "Sí, me cuesta ver el futuro con ilusión",
-                "No, tengo metas",
-                "No estoy seguro"
-            ]
-        }
-
+        respuesta = dialog_manager.obtener_mensaje_desesperanza()
         return respuesta, datos_guardados
 
 
@@ -342,19 +301,74 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
 
         datos_guardados["puntuacion_desesperanza"] = puntuacion
 
-        respuesta = {
-            "estado": "proximo_estado",  # Sustituir por la siguiente pregunta
-            "mensaje": (
-                "Gracias por tu respuesta. La percepción del futuro también influye mucho en cómo nos sentimos.\n"
-                "Seguiremos con la siguiente pregunta cuando estés preparado/a."
-            ),
-            "modo_entrada": "texto_libre",
-            "sugerencias": []
-        }
+        respuesta = dialog_manager.obtener_mensaje_inutilidad()
+        return respuesta, datos_guardados
+
+
+    # --- Preguntar sentimientos de inutilidad ---
+    if estado_actual == "preguntar_inutilidad":
+        texto_limpio = limpiar_texto(texto_usuario)
+
+        if detectar_ambiguedad(texto_limpio):
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        registrar_interaccion(
+            session_id, estado_actual,
+            "¿En los últimos días has sentido que no eres suficiente?", texto_usuario
+        )
+
+        intencion = detectar_intencion(texto_limpio)
+
+        if intencion == "afirmativo":
+            datos_guardados["inutilidad"] = True
+            datos_guardados["puntuacion_inutilidad"] = 1
+
+            respuesta = dialog_manager.obtener_detalle_inutilidad()
+
+        elif intencion == "negativo":
+            datos_guardados["inutilidad"] = False
+            datos_guardados["puntuacion_inutilidad"] = 0
+
+            respuesta = dialog_manager.obtener_mensaje_esperar_siguiente_pregunta()
+
+        else:
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        return respuesta, datos_guardados
+
+
+    # --- Detalle situaciones de inutilidad ---
+    if estado_actual == "detalle_inutilidad":
+        registrar_interaccion(session_id, estado_actual,
+                            "¿En qué situaciones sientes que no eres suficiente?", texto_usuario)
+
+        datos_guardados["situaciones_inutilidad"] = texto_usuario
+
+        # De momento avanzamos a un estado genérico
+        respuesta = dialog_manager.obtener_mensaje_esperar_siguiente_pregunta()
         return respuesta, datos_guardados
 
 
 
+
+
+
+
+
+
+
+    # --- Esperar próxima sección aún no definida ---
+    if estado_actual == "esperar_siguiente_pregunta":
+        respuesta = {
+            "estado": FIN,
+            "mensaje": (
+                "Gracias por compartir todo esto conmigo. Tus respuestas son muy valiosas.\n\n"
+                "De momento, esta es toda la información que necesitaba recopilar. Pronto continuaré con más preguntas."
+            ),
+            "modo_entrada": "fin",
+            "sugerencias": []
+        }
+        return respuesta, datos_guardados
 
 
     # --- Fallback de error ---

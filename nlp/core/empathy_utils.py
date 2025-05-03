@@ -156,6 +156,31 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
             "sugerencias": ["Sí, me cuesta ilusionarme", "No, tengo metas", "No estoy seguro"]
         }
 
+    if estado_actual == "preguntar_inutilidad":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "Está bien si no sabes cómo expresarlo aún.\n\n"
+                "A veces, cuando nos sentimos tristes o con la autoestima baja, podemos llegar a pensar que no somos suficientes o que no hacemos nada bien.\n\n"
+                "¿Te ha pasado esto últimamente? Puedes responder, por ejemplo:\n"
+                "'Sí, me he sentido así a veces' o 'No, en realidad no'."
+            ),
+            "modo_entrada": "texto_libre",
+            "sugerencias": ["Sí, me ha pasado", "No, no me ha pasado", "No estoy seguro"]
+        }
+
+    if estado_actual == "detalle_inutilidad":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "A veces cuesta identificar en qué momentos nos sentimos así.\n\n"
+                "Cuando hablamos de sentir que no somos suficientes, pueden influir situaciones donde nos juzgamos, nos comparamos o sentimos que no cumplimos expectativas.\n\n"
+                "¿En qué momentos se te suele pasar ese pensamiento por la cabeza?"
+            ),
+            "modo_entrada": "texto_libre",
+            "sugerencias": ["Cuando me equivoco", "Cuando me comparo", "Cuando estoy solo/a"]
+        }
+
 
     return {
         "estado": estado_actual,

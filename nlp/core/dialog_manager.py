@@ -159,3 +159,55 @@ def obtener_mensaje_desesperanza() -> dict:
         "sugerencias": ["Sí, me cuesta ver el futuro con ilusión", "No, tengo metas", "No estoy seguro"]
     }
 
+
+def obtener_mensaje_inutilidad() -> dict:
+    return {
+        "estado": "preguntar_inutilidad",
+        "mensaje": (
+            "A veces, cuando estamos tristes, podemos ser muy duros con nosotros mismos.\n\n"
+            "¿En los últimos días has sentido que no eres suficiente?\n\n"
+            "Puedes responder, por ejemplo: 'Sí, a veces me siento así' o 'No, no me ha pasado'."
+        ),
+        "modo_entrada": "texto_libre",
+        "sugerencias": [
+            "Sí, me ha pasado",
+            "No, no me ha pasado",
+            "No estoy seguro"
+        ]
+    }
+
+def obtener_detalle_inutilidad() -> dict:
+    return {
+        "estado": "detalle_inutilidad",
+        "mensaje": (
+            "Lamento que hayas tenido esa sensación. Gracias por compartirlo.\n\n"
+            "¿En qué situaciones se te viene normalmente este pensamiento a la cabeza?"
+        ),
+        "modo_entrada": "texto_libre",
+        "sugerencias": ["Cuando me equivoco", "Cuando me comparo", "Cuando estoy solo/a"]
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def obtener_mensaje_esperar_siguiente_pregunta() -> dict:
+    return {
+        "estado": "esperar_siguiente_pregunta",
+        "mensaje": (
+            "Gracias por contármelo. Ser tan duros con nosotros mismos puede aumentar el malestar, "
+            "y reconocerlo es un paso valiente hacia el cuidado personal.\n\n"
+            "Seguiremos con la siguiente pregunta en cuanto esté lista para ti."
+        ),
+        "modo_entrada": "texto_libre",
+        "sugerencias": []
+    }
