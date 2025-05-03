@@ -21,35 +21,94 @@ except redis.exceptions.ConnectionError:
 # -------------------- Diccionarios de patrones --------------------
 
 FRECUENCIA_PATRONES = {
+    10: [
+        "todos los días", "cada día", "diariamente", "a diario", "todos los santos días",
+        "día tras día", "sin excepción", "cada jornada", "cada jornada sin fallo"
+    ],
     9: [
-        "todos los días", "cada día", "diariamente", "a diario", "casi todos los días",
-        "día tras día", "sin falta", "todos los santos días"
+        "casi todos los días", "prácticamente cada día", "habitualmente", "con regularidad diaria",
+        "casi a diario", "la mayoría del tiempo", "regularmente"
+    ],
+    8: [
+        "muy seguido", "muy a menudo", "constantemente", "con mucha frecuencia",
+        "frecuencia alta", "días seguidos", "en muchas ocasiones"
+    ],
+    7: [
+        "a menudo", "frecuentemente", "muchos días", "bastantes veces", "con cierta regularidad",
+        "suele pasar a menudo", "varias veces a la semana", "habitual pero no diario"
     ],
     6: [
-        "muy seguido", "a menudo", "frecuentemente", "varias veces por semana",
-        "de vez en cuando", "ocasionalmente", "algunas veces", "algunos días",
-        "bastantes días", "la mayoría de los días", "con frecuencia", "muchos días"
+        "algunas veces por semana", "más de una vez por semana", "la mayoría de los días",
+        "varias veces en la semana", "con cierta frecuencia", "días alternos", "a días sí, a días no"
+    ],
+    5: [
+        "de vez en cuando", "algunos días", "ocasionalmente", "algunas veces", "no muy a menudo",
+        "de forma esporádica", "cada tanto", "en ocasiones"
+    ],
+    4: [
+        "con poca frecuencia", "bastantes días pero no siempre", "con frecuencia moderada",
+        "solo a veces", "algunos días sueltos"
     ],
     3: [
-        "rara vez", "pocas veces", "casi nunca", "nunca", "muy pocas veces",
-        "alguna vez", "en contadas ocasiones"
+        "pocas veces", "en contadas ocasiones", "muy de vez en cuando", "no suele pasar mucho",
+        "raramente pero ocurre", "de forma muy esporádica"
+    ],
+    2: [
+        "casi nunca", "muy pocas veces", "prácticamente nunca", "una vez en mucho tiempo",
+        "solo una vez últimamente", "casi ni lo noto"
+    ],
+    1: [
+        "nunca", "no recuerdo la última vez", "rara vez", "jamás", "en absoluto",
+        "no me ha pasado", "no ocurre", "no sucede"
     ]
 }
 
+
 DURACION_PATRONES = {
+    10: [
+        "semanas completas", "más de un mes", "varios meses", "durante mucho tiempo",
+        "meses enteros", "desde hace mucho", "por un largo tiempo", "periodos prolongados",
+        "varios meses seguidos"
+    ],
     9: [
-        "semanas", "una semana", "más de una semana", "muchos días",
-        "varias semanas", "largos periodos", "mucho tiempo", "durante semanas"
+        "más de tres semanas", "aproximadamente un mes", "casi un mes entero", "alrededor de un mes",
+        "muchísimo tiempo", "más de 21 días", "por mucho tiempo seguido", "dura un mes o más"
+    ],
+    8: [
+        "varias semanas", "tres semanas", "largos periodos", "suele extenderse semanas",
+        "dos o tres semanas", "más de dos semanas", "entre dos y tres semanas"
+    ],
+    7: [
+        "unas tres semanas", "casi un mes", "algo más de dos semanas", "dura bastante",
+        "entre 15 y 20 días", "cerca de veinte días", "alrededor de tres semanas"
     ],
     6: [
-        "días", "varios días", "uno o dos días", "algunos días",
-        "un par de días", "durante días"
+        "dos semanas", "más de una semana", "más de diez días", "10 o 12 días", "quince días",
+        "semana y media", "entre una y dos semanas", "una semana larga"
+    ],
+    5: [
+        "una semana", "entre 7 y 10 días", "siete días exactos", "suele durar una semana",
+        "siete u ocho días", "una semana justa"
+    ],
+    4: [
+        "unos días", "algunos días", "un par de días", "durante días", "cuatro o cinco días",
+        "entre tres y cinco días", "dura pocos días", "tres o cuatro días", "unos cuantos días"
     ],
     3: [
-        "horas", "un par de horas", "unas horas", "minutos", "media hora",
-        "rato", "corto tiempo", "instantes", "momentos", "breve"
+        "un día", "unas 24 horas", "todo un día", "dura solo un día", "un día entero",
+        "un día exacto", "solo un día"
+    ],
+    2: [
+        "unas horas", "medio día", "pocas horas", "instantes largos", "varias horas",
+        "una tarde", "una mañana", "unas cuantas horas", "dura pocas horas"
+    ],
+    1: [
+        "minutos", "muy poco tiempo", "momentos", "breve", "instantes",
+        "pasa rápido", "dura muy poco", "solo unos minutos", "algo muy breve"
     ]
 }
+
+
 
 # -------------------- Funciones de cálculo --------------------
 
@@ -59,7 +118,7 @@ def buscar_valor_aproximado(valor_usuario: str, patrones: dict) -> int:
         for expresion in expresiones:
             if expresion in valor_usuario:
                 return puntuacion
-    return 3  # Por defecto
+    return 1  # Por defecto, la mínima puntuación
 
 def calcular_puntuacion(tipo: str, valor: str) -> int:
     valor_normalizado = limpiar_texto(valor.lower().strip())

@@ -5,14 +5,15 @@ def obtener_mensaje_presentacion() -> dict:
     return {
         "estado": "presentacion",
         "mensaje": (
-            "¡Hola! Soy un asistente virtual diseñado para ayudarte a reflexionar sobre tu estado emocional.\n"
-            "Te haré algunas preguntas para entender mejor cómo te has sentido últimamente.\n"
-            "Esta evaluación no sustituye a una consulta profesional, pero puede ayudarte a poner en palabras lo que estás experimentando.\n\n"
-            "¿Te parece bien continuar con la evaluación?\n\n"
-            "Puedes responder, por ejemplo: 'Sí, quiero seguir' o 'Prefiero no hacerlo'."
+            "¡Hola! Soy un asistente virtual diseñado para ayudar en la evaluación de tu estado de ánimo.\n\n"
+            "Te haré algunas preguntas para conocer cómo te has sentido en los últimos días. "
+            "Esta evaluación no sustituye a una consulta profesional y su único propósito es recopilar información de manera clara y organizada.\n\n"
+            "Ten en cuenta que soy un asistente virtual o chatbot, no un psicólogo humano, por lo que te pido por favor que escribas respuestas concisas.\n\n"
+            "Antes de comenzar, necesito tu consentimiento. Recuerda que, en cualquier caso, tu información será tratada con confidencialidad.\n\n"
+            "¿Estás de acuerdo en continuar con la evaluación?"
         ),
         "modo_entrada": "texto_libre",
-        "sugerencias": ["Sí", "No"]
+        "sugerencias": ["Sí, estoy de acuerdo", "No, prefiero no continuar"]
     }
 
 
@@ -72,10 +73,19 @@ def obtener_mensaje_frecuencia_tristeza() -> dict:
         "estado": "frecuencia_tristeza",
         "mensaje": (
             "Gracias por compartirlo. Ahora me gustaría saber con qué frecuencia sueles experimentar esa tristeza.\n\n"
-            "Puedes responder de forma aproximada, por ejemplo: 'Todos los días', 'De vez en cuando', 'Rara vez'."
+            "No es necesario que la respuesta sea exacta, solo una idea general. Puedes usar expresiones como:\n"
+            "'Todos los días', 'Muy seguido', 'De vez en cuando', 'Casi nunca', etc."
         ),
         "modo_entrada": "texto_libre",
-        "sugerencias": ["Todos los días", "De vez en cuando", "Rara vez"]
+        "sugerencias": [
+            "Todos los días [10]",
+            "Muy seguido [8]",
+            "A menudo [7]",
+            "De vez en cuando [5]",
+            "Pocas veces [3]",
+            "Casi nunca [2]",
+            "Nunca [1]"
+        ]
     }
 
 # -------------------- Exploración: Duración --------------------
@@ -83,14 +93,21 @@ def obtener_mensaje_duracion_tristeza() -> dict:
     return {
         "estado": "duracion_tristeza",
         "mensaje": (
-            "Gracias por compartirlo. Ahora me gustaría saber cuánto tiempo suele durarte esa tristeza una vez aparece.\n\n"
-            "Puede ser algo breve o prolongado. Me interesa una estimación aproximada, no hace falta que sea exacta.\n\n"
-            "Por ejemplo: 'Unas horas', 'Uno o dos días', 'Más de una semana', etc."
+            "Gracias por compartirlo. Me gustaría saber cuánto tiempo suele durarte esa tristeza cuando aparece.\n\n"
+            "Puede durar unos instantes, horas, días o incluso semanas. No te preocupes por ser preciso, con una estimación basta.\n"
+            "Por ejemplo: 'Unas horas', 'Un par de días', 'Una semana', 'Más de un mes', etc."
         ),
         "modo_entrada": "texto_libre",
-        "sugerencias": ["Unas horas", "Uno o dos días", "Más de una semana"]
+        "sugerencias": [
+            "Unas horas [2]",
+            "Un día [3]",
+            "Un par de días [4]",
+            "Una semana [5]",
+            "Dos semanas [6]",
+            "Varias semanas [8]",
+            "Más de un mes [10]"
+        ]
     }
-
 
 # -------------------- Exploración: Intensidad --------------------
 def obtener_mensaje_intensidad_tristeza() -> dict:
@@ -104,3 +121,5 @@ def obtener_mensaje_intensidad_tristeza() -> dict:
         "modo_entrada": "texto_libre",
         "sugerencias": ["3", "5", "8", "10"]
     }
+
+
