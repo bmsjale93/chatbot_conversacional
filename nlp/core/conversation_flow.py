@@ -125,7 +125,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         respuesta["estado"] = "inicio_exploracion_tristeza"
         return respuesta, datos_guardados
 
-
+    # ------- APARTADO TRISTEZA ---------
     # --- Inicio de exploración emocional (tristeza) ---
     if estado_actual == "inicio_exploracion_tristeza":
 
@@ -249,6 +249,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         }
         return respuesta, datos_guardados
 
+    # ------- APARTADO ANHEDONIA ---------
     # --- Preguntar sobre anhedonia ---
     if estado_actual == "preguntar_anhedonia":
         texto_limpio = limpiar_texto(texto_usuario)
@@ -272,16 +273,18 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
                 "modo_entrada": "texto_libre",
                 "sugerencias": ["Salir con amigos", "Escuchar música", "Hacer ejercicio"]
             }
+
         elif intencion == "negativo":
             datos_guardados["anhedonia"] = False
             respuesta = {
-                "estado": "proximo_estado",  # Sustituye por el siguiente bloque real cuando lo implementemos
+                "estado": "preguntar_desesperanza",
                 "mensaje": (
                     "Me alegra saber que sigues disfrutando de tus actividades. Continuemos con la siguiente pregunta."
                 ),
                 "modo_entrada": "texto_libre",
                 "sugerencias": []
             }
+            
         else:
             return generar_respuesta_aclaratoria(estado_actual), datos_guardados
 
@@ -290,20 +293,69 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
     # --- Detalle actividades con anhedonia ---
     if estado_actual == "detalle_anhedonia":
         registrar_interaccion(session_id, estado_actual,
-                              "¿Qué actividades has dejado de disfrutar?", texto_usuario)
+                            "¿Qué actividades has dejado de disfrutar?", texto_usuario)
 
         datos_guardados["actividades_sin_disfrute"] = texto_usuario
 
         respuesta = {
-            "estado": "proximo_estado",  # Sustituye por el siguiente bloque real cuando lo implementemos
+            "estado": "preguntar_desesperanza",
             "mensaje": (
-                "Gracias por contármelo. Tener en cuenta qué cosas han perdido interés puede aportar mucha información."
-                "\n\nSeguiremos con la siguiente pregunta cuando estés listo/a."
+                "Gracias por contármelo. Tener en cuenta qué cosas han perdido interés puede aportar mucha información.\n\n"
+                "Ahora me gustaría preguntarte algo más.\n\n"
+                "Cuando piensas en el futuro, ¿te resulta difícil encontrar algo que te ilusione o motive?\n\n"
+                "Puedes responder con sinceridad, por ejemplo: 'Sí, últimamente nada me motiva' o 'No, tengo cosas que me ilusionan'."
+            ),
+            "modo_entrada": "texto_libre",
+            "sugerencias": [
+                "Sí, me cuesta ver el futuro con ilusión",
+                "No, tengo metas",
+                "No estoy seguro"
+            ]
+        }
+
+        return respuesta, datos_guardados
+
+
+    # --- Preguntar desesperanza ---
+    if estado_actual == "preguntar_desesperanza":
+        texto_limpio = limpiar_texto(texto_usuario)
+
+        if detectar_ambiguedad(texto_limpio):
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        registrar_interaccion(
+            session_id, estado_actual,
+            "¿Te resulta difícil encontrar algo que te ilusione o motive al pensar en el futuro?",
+            texto_usuario
+        )
+
+        intencion = detectar_intencion(texto_limpio)
+
+        if intencion == "afirmativo":
+            datos_guardados["desesperanza"] = True
+            puntuacion = 1
+        elif intencion == "negativo":
+            datos_guardados["desesperanza"] = False
+            puntuacion = 0
+        else:
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        datos_guardados["puntuacion_desesperanza"] = puntuacion
+
+        respuesta = {
+            "estado": "proximo_estado",  # Sustituir por la siguiente pregunta
+            "mensaje": (
+                "Gracias por tu respuesta. La percepción del futuro también influye mucho en cómo nos sentimos.\n"
+                "Seguiremos con la siguiente pregunta cuando estés preparado/a."
             ),
             "modo_entrada": "texto_libre",
             "sugerencias": []
         }
         return respuesta, datos_guardados
+
+
+
+
 
     # --- Fallback de error ---
     respuesta = {

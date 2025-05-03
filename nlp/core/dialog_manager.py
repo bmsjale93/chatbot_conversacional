@@ -148,4 +148,14 @@ def obtener_mensaje_anhedonia_profunda() -> dict:
         "sugerencias": ["Salir con amigos", "Escuchar música", "Hacer deporte"]
     }
 
+def obtener_mensaje_desesperanza() -> dict:
+    return {
+        "estado": "preguntar_desesperanza",
+        "mensaje": (
+            "Cuando piensas en el futuro, ¿te resulta difícil encontrar algo que te ilusione o motive?\n\n"
+            "Puedes responder con sinceridad, por ejemplo: 'Sí, últimamente nada me motiva' o 'No, tengo cosas que me ilusionan'."
+        ),
+        "modo_entrada": "texto_libre",
+        "sugerencias": ["Sí, me cuesta ver el futuro con ilusión", "No, tengo metas", "No estoy seguro"]
+    }
 

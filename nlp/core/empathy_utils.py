@@ -144,6 +144,18 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
             "sugerencias": ["Sí, he perdido interés", "No, sigo disfrutando igual", "No lo sé"]
         }
 
+    if estado_actual == "preguntar_desesperanza":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "Está bien si no lo tienes claro. A veces cuesta poner en palabras cómo nos sentimos con respecto al futuro.\n\n"
+                "Cuando te pregunto si te cuesta encontrar algo que te motive o ilusione, me refiero a si ves difícil entusiasmarte con cosas por venir, ya sean planes, metas o actividades.\n\n"
+                "¿Te sientes así últimamente?"
+            ),
+            "modo_entrada": "texto_libre",
+            "sugerencias": ["Sí, me cuesta ilusionarme", "No, tengo metas", "No estoy seguro"]
+        }
+
 
     return {
         "estado": estado_actual,
