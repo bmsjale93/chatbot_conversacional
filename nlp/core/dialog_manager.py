@@ -123,3 +123,29 @@ def obtener_mensaje_intensidad_tristeza() -> dict:
     }
 
 
+# -------------------- Síntomas físicos y conductuales --------------------
+
+def obtener_mensaje_anhedonia() -> dict:
+    return {
+        "estado": "preguntar_anhedonia",
+        "mensaje": (
+            "A veces, lo que antes disfrutábamos deja de parecernos interesante o emocionante.\n\n"
+            "¿Has notado si en los últimos días has perdido el interés o el placer en algunas actividades que solías disfrutar?\n\n"
+            "Puedes responder, por ejemplo: 'Sí, ya no disfruto de algunas cosas' o 'No, sigo disfrutando igual'."
+        ),
+        "modo_entrada": "texto_libre",
+        "sugerencias": ["Sí, he perdido interés", "No, sigo disfrutando igual"]
+    }
+
+def obtener_mensaje_anhedonia_profunda() -> dict:
+    return {
+        "estado": "detalle_anhedonia",
+        "mensaje": (
+            "Gracias por compartirlo. ¿Podrías decirme qué actividades específicas has dejado de disfrutar recientemente?\n"
+            "Esto me ayuda a entender mejor en qué áreas has notado el cambio."
+        ),
+        "modo_entrada": "texto_libre",
+        "sugerencias": ["Salir con amigos", "Escuchar música", "Hacer deporte"]
+    }
+
+

@@ -235,123 +235,75 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         registrar_interaccion(session_id, estado_actual,
                               "Cuando sientes tristeza, ¿cómo de intensa es?", texto_usuario)
 
-        # Generar resumen de evaluación (media)
-        resumen = generar_resumen_evaluacion(session_id)
-        datos_guardados["resumen"] = resumen
-
-        media = resumen["perfil_emocional"].get("media", 0)
-        perfil = resumen["evaluacion"].capitalize()
-
-        # Mensaje personalizado por perfil
-        if resumen["evaluacion"] == "leve":
-            mensaje_extra = (
-                "Tu nivel actual de tristeza parece ser bajo o puntual. Esto indica que, en general, estás gestionando tus emociones de forma saludable.\n\n"
-                "Mantén esos hábitos positivos que te ayudan a mantener el equilibrio emocional, y no dudes en darte espacio para sentir y reflexionar cuando lo necesites."
-            )
-        elif resumen["evaluacion"] == "moderado":
-            mensaje_extra = (
-                "Tu nivel de tristeza es moderado. Es normal atravesar etapas así, y lo importante es que estás prestando atención a tu bienestar.\n\n"
-                "Considera dedicar tiempo a actividades que te aporten calma, rodearte de personas de confianza y, si lo necesitas, expresar lo que sientes sin juzgarte.\n"
-                "Reconocer tus emociones es un paso valiente hacia el cuidado personal."
-            )
-        else:
-            mensaje_extra = (
-                "Tu nivel de tristeza actual es alto, lo cual puede estar generando un malestar significativo en tu día a día.\n\n"
-                "Recuerda que no estás solo/a: hablar con un profesional puede ayudarte a entender mejor lo que estás atravesando y darte herramientas para afrontarlo.\n"
-                "Buscar apoyo no es signo de debilidad, sino un acto de fortaleza y autocuidado. Tu bienestar es importante."
-            )
-
-        mensaje = (
-            f"🔍 **Resumen de evaluación emocional:**\n"
-            f"- Perfil detectado: {perfil}\n"
-            f"- Puntuación emocional media: {media}/10\n\n"
-            f"{mensaje_extra}\n\n"
-            "¿Te gustaría valorar cómo te has sentido conversando conmigo? (0 = nada empático, 10 = muy empático)"
-        )
-
+        # Transición directa al siguiente bloque sin mostrar resumen
         respuesta = {
-            "estado": "preguntar_empatia",
-            "mensaje": mensaje,
-            "modo_entrada": "numero",
-            "sugerencias": []
+            "estado": "preguntar_anhedonia",
+            "mensaje": (
+                "Gracias por compartir cómo ha sido la intensidad de esa tristeza.\n\n"
+                "Ahora me gustaría preguntarte sobre otras experiencias que pueden estar relacionadas con el estado de ánimo."
+                "\n\nA veces, lo que antes disfrutábamos deja de parecernos interesante o emocionante."
+                "\n\n¿Has notado si en los últimos días has perdido el interés o el placer en algunas actividades que solías disfrutar?"
+            ),
+            "modo_entrada": "texto_libre",
+            "sugerencias": ["Sí, me ha pasado", "No, sigo disfrutando", "No estoy seguro"]
         }
         return respuesta, datos_guardados
 
-    # --- Mostrar resumen de evaluación ---
-    if estado_actual == "mostrar_resumen":
-        resumen = generar_resumen_evaluacion(session_id)
-        datos_guardados["resumen"] = resumen
-
-        mensaje = (
-            f"🔍 **Resumen de evaluación emocional:**\n"
-            f"- Perfil detectado: {resumen['evaluacion'].capitalize()}\n"
-            f"- Puntuación acumulada: {resumen['perfil_emocional'].get('total', 0)}\n\n"
-            "¿Te gustaría valorar cómo te has sentido conversando conmigo? (0 = nada empático, 10 = muy empático)"
-        )
-
-        respuesta = {
-            "estado": "preguntar_empatia",
-            "mensaje": mensaje,
-            "modo_entrada": "numero",
-            "sugerencias": []
-        }
-        return respuesta, datos_guardados
-
-    # --- Preguntar valoración de empatía ---
-    if estado_actual == "preguntar_empatia":
+    # --- Preguntar sobre anhedonia ---
+    if estado_actual == "preguntar_anhedonia":
         texto_limpio = limpiar_texto(texto_usuario)
 
         if detectar_ambiguedad(texto_limpio):
             return generar_respuesta_aclaratoria(estado_actual), datos_guardados
 
-        coincidencias = re.findall(r"\b([0-9]|10)\b", texto_limpio)
-        if coincidencias:
-            try:
-                empatia = int(coincidencias[0])
-                empatia = max(0, min(empatia, 10))
-            except ValueError:
-                empatia = 5
+        registrar_interaccion(session_id, estado_actual,
+                              "¿Has notado pérdida de interés o placer en actividades que antes disfrutabas?", texto_usuario)
+
+        intencion = detectar_intencion(texto_limpio)
+
+        if intencion == "afirmativo":
+            datos_guardados["anhedonia"] = True
+            respuesta = {
+                "estado": "detalle_anhedonia",
+                "mensaje": (
+                    "Gracias por tu sinceridad. Es importante reconocer estos cambios.\n\n"
+                    "¿Podrías contarme qué actividades has dejado de disfrutar recientemente?"
+                ),
+                "modo_entrada": "texto_libre",
+                "sugerencias": ["Salir con amigos", "Escuchar música", "Hacer ejercicio"]
+            }
+        elif intencion == "negativo":
+            datos_guardados["anhedonia"] = False
+            respuesta = {
+                "estado": "proximo_estado",  # Sustituye por el siguiente bloque real cuando lo implementemos
+                "mensaje": (
+                    "Me alegra saber que sigues disfrutando de tus actividades. Continuemos con la siguiente pregunta."
+                ),
+                "modo_entrada": "texto_libre",
+                "sugerencias": []
+            }
         else:
-            # En caso de ambigüedad no numérica
             return generar_respuesta_aclaratoria(estado_actual), datos_guardados
 
-        datos_guardados["valoracion_empatia"] = empatia
+        return respuesta, datos_guardados
 
-        resumen = datos_guardados.get("resumen", {})
-        riesgo = resumen.get("evaluacion") == "grave"
+    # --- Detalle actividades con anhedonia ---
+    if estado_actual == "detalle_anhedonia":
+        registrar_interaccion(session_id, estado_actual,
+                              "¿Qué actividades has dejado de disfrutar?", texto_usuario)
 
-        if empatia >= 8:
-            mensaje_final = (
-                "Me alegra mucho saber que te has sentido acompañado/a durante esta conversación. "
-                "Tu bienestar importa, y estoy aquí siempre que necesites hablar. "
-                "Gracias por confiar en este espacio."
-            )
-        elif empatia >= 5:
-            mensaje_final = (
-                "Gracias por tu valoración. Me esforzaré en seguir mejorando para ofrecerte una experiencia más empática y cercana. "
-                "Recuerda que siempre estaré disponible si deseas volver a hablar."
-            )
-        else:
-            mensaje_final = (
-                "Lamento que esta experiencia no haya sido tan empática como esperabas. "
-                "Tu opinión es valiosa para mejorar este espacio de escucha y apoyo. "
-                "Gracias por haber participado con sinceridad."
-            )
-
-        if riesgo:
-            mensaje_final = (
-                "📢 *Detectamos un posible nivel elevado de malestar.*\n"
-                "Te recomendamos que hables con un profesional de la salud mental.\n\n" + mensaje_final
-            )
+        datos_guardados["actividades_sin_disfrute"] = texto_usuario
 
         respuesta = {
-            "estado": "cierre_final",
-            "mensaje": mensaje_final,
-            "modo_entrada": "fin",
+            "estado": "proximo_estado",  # Sustituye por el siguiente bloque real cuando lo implementemos
+            "mensaje": (
+                "Gracias por contármelo. Tener en cuenta qué cosas han perdido interés puede aportar mucha información."
+                "\n\nSeguiremos con la siguiente pregunta cuando estés listo/a."
+            ),
+            "modo_entrada": "texto_libre",
             "sugerencias": []
         }
         return respuesta, datos_guardados
-
 
     # --- Fallback de error ---
     respuesta = {

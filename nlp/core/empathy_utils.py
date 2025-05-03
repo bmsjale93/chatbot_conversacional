@@ -131,6 +131,19 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
             "modo_entrada": "texto_libre",
             "sugerencias": ["3", "6", "10"]
         }
+    
+    if estado_actual == "preguntar_anhedonia":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "No pasa nada si no estás seguro/a. Me refiero a si últimamente has dejado de disfrutar cosas que antes te gustaban, "
+                "como ver una película, estar con amigos, leer, hacer deporte o cualquier otra actividad que solías disfrutar.\n\n"
+                "¿Dirías que has notado esa pérdida de interés o placer?"
+            ),
+            "modo_entrada": "texto_libre",
+            "sugerencias": ["Sí, he perdido interés", "No, sigo disfrutando igual", "No lo sé"]
+        }
+
 
     return {
         "estado": estado_actual,
