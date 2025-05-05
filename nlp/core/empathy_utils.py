@@ -181,6 +181,25 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
             "sugerencias": ["Cuando me equivoco", "Cuando me comparo", "Cuando estoy solo/a"]
         }
 
+    if estado_actual == "preguntar_ideacion_suicida":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "Entiendo que esta puede ser una pregunta difícil de responder. Lo importante es que puedas expresar lo que has sentido.\n\n"
+                "Cuando hablo de ideación suicida, me refiero a pensamientos como:\n"
+                "- 'Sería mejor no estar aquí'\n"
+                "- 'La vida no tiene sentido'\n"
+                "- 'He pensado en hacerme daño'\n\n"
+                "¿Has tenido pensamientos como estos en los últimos días?"
+            ),
+            "modo_entrada": "texto_libre",
+            "sugerencias": [
+                "No, en ningún momento",
+                "Sí, pero sin intención de hacerme daño",
+                "Sí, pensé en hacerme daño, pero no tengo intención",
+                "Sí, pensé en hacerme daño y tengo un plan"
+            ]
+        }
 
     return {
         "estado": estado_actual,
@@ -193,18 +212,86 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
     }
 # -------------------- Mensajes empáticos --------------------
 
-def generar_respuesta_empatica(mensaje_base: str, tipo: str = "tristeza") -> str:
+def generar_respuesta_empatica(mensaje_base: str, tipo: str = "neutral") -> str:
     """
-    Agrega una frase empática al inicio del mensaje base según el tipo emocional.
+    Agrega una frase empática al inicio del mensaje base según la emoción detectada.
     """
+
     frases_empaticas = {
-        "tristeza": "Lamento que te sientas así, compartirlo ya es un primer paso importante. ",
-        "ansiedad": "Entiendo que puede ser difícil hablar de esto. ",
-        "enojo": "Gracias por expresar cómo te sientes. ",
-        "neutral": "Gracias por compartir cómo te sientes. ",
-        "positivo": "Qué bueno que te sientas bien. ",
+        "tristeza": (
+            "Lamento que estés atravesando momentos difíciles. Sentirse triste es humano y hablar de ello es un acto de valentía. "
+            "Estoy aquí para acompañarte mientras lo compartes. "
+        ),
+        "alegría": (
+            "Qué maravilloso que experimentes alegría. Reconocer y disfrutar estos momentos es esencial para nuestro bienestar emocional. "
+            "Gracias por compartirlo. "
+        ),
+        "amor": (
+            "Sentirse amado/a o experimentar afecto profundo puede reconfortar el alma. "
+            "Me alegra saber que ese sentimiento está presente en ti. "
+        ),
+        "enojo": (
+            "Percibo que algo te ha generado molestia o rabia. Es totalmente válido sentirse así ante ciertas situaciones. "
+            "Gracias por expresarlo con sinceridad. "
+        ),
+        "miedo": (
+            "El miedo puede llegar a ser paralizante, pero compartirlo ya es un gran paso para gestionarlo. "
+            "No estás solo/a enfrentándolo. "
+        ),
+        "sorpresa": (
+            "Veo que has experimentado algo inesperado. La sorpresa forma parte de nuestra vida emocional, "
+            "y a veces nos deja con muchas sensaciones por procesar. "
+        ),
+        "culpa": (
+            "La culpa puede ser una emoción muy pesada. Hablar de ella y reconocerla es un acto importante de cuidado emocional. "
+            "Gracias por confiar en este espacio. "
+        ),
+        "vergüenza": (
+            "Comprendo que compartir lo que nos avergüenza puede resultar difícil. "
+            "Tu sinceridad es valiosa y demuestra una gran fortaleza interna. "
+        ),
+        "frustración": (
+            "La frustración aparece cuando sentimos que algo escapa a nuestro control. "
+            "Expresarla puede aliviar esa tensión acumulada. Estoy aquí para escucharte sin juicios. "
+        ),
+        "ansiedad": (
+            "La ansiedad puede ser abrumadora y agotadora. Reconocerla y compartirla es ya un gran paso hacia el alivio. "
+            "Gracias por tu confianza. "
+        ),
+        "agotamiento": (
+            "Siento que estás atravesando un periodo de mucho desgaste. El cansancio profundo también merece ser escuchado y atendido. "
+            "Gracias por expresarlo. "
+        ),
+        "soledad": (
+            "La soledad puede sentirse muy intensa. Saber que lo estás compartiendo me permite estar más cerca de lo que estás viviendo. "
+            "Gracias por abrirte. "
+        ),
+        "esperanza": (
+            "La esperanza es una fuerza poderosa que nos impulsa a seguir adelante. Me alegra saber que la mantienes viva. "
+            "Nunca dejes de aferrarte a ella. "
+        ),
+        "indiferencia": (
+            "Sentirse apagado o indiferente también forma parte de nuestros procesos emocionales. "
+            "Gracias por reconocerlo. Estoy aquí contigo. "
+        ),
+        "preocupación": (
+            "Parece que hay algo que te inquieta. Puedes contar conmigo para compartir esas preocupaciones y aliviar un poco su peso. "
+        ),
+        "confusión": (
+            "Sentirse confundido es completamente comprensible, especialmente en momentos de cambio o malestar. "
+            "Vamos poco a poco, con calma. "
+        ),
+        "neutral": (
+            "Gracias por compartir tu experiencia emocional. Sea cual sea, tiene valor y merece ser escuchada. "
+        ),
+        "positivo": (
+            "Es reconfortante saber que te sientes bien. Agradezco que compartas ese estado conmigo. "
+            "Disfrútalo plenamente, lo mereces. "
+        )
     }
-    frase_intro = frases_empaticas.get(tipo, "")
+
+
+    frase_intro = frases_empaticas.get(tipo, "Gracias por compartir cómo te sientes. ")
     return f"{frase_intro}{mensaje_base}"
 
 # -------------------- Ambigüedad específica de identidad --------------------

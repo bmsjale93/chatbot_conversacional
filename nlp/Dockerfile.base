@@ -4,11 +4,11 @@ FROM python:3.9-slim
 # Establecemos el directorio de trabajo
 WORKDIR /app
 
-# Evitamos archivos pyc y forzamos logs a stdout
+# Evitamos archivos .pyc y forzamos logs a stdout
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Instalamos librerías del sistema necesarias para compilar e instalar paquetes NLP
+# Instalamos librerías del sistema necesarias
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libffi-dev \
@@ -19,21 +19,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Instalamos librerías clave de NLP
+# Instalamos dependencias de NLP y análisis emocional
 RUN pip install --upgrade pip && pip install --no-cache-dir \
     spacy==3.7.2 \
     transformers==4.39.1 \
     torch==2.2.2 \
+    sentencepiece \
+    protobuf \
+    accelerate==0.26.1 \
     pysentimiento==0.5.2
 
-# Descargamos modelo pequeño de spaCy para español (es_core_news_sm)
+# Descargamos modelo de spaCy para español
 RUN python -m spacy download es_core_news_sm
 
-# Precargamos modelo de Hugging Face
-RUN python -c "from transformers import pipeline; pipeline('sentiment-analysis', model='pysentimiento/robertuito-sentiment-analysis')"
-
-# Creamos carpetas explícitamente para asegurar cache persistente
+# Creamos carpetas de caché explícitas
 RUN mkdir -p /root/.cache/huggingface /root/.cache/spacy
 
-# Indicamos que esta imagen es para heredar
+# Imagen lista para heredar
 CMD ["/bin/bash"]

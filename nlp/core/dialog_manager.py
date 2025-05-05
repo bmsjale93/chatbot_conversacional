@@ -12,7 +12,7 @@ def obtener_mensaje_presentacion() -> dict:
             "Antes de comenzar, necesito tu consentimiento. Recuerda que, en cualquier caso, tu información será tratada con confidencialidad.\n\n"
             "¿Estás de acuerdo en continuar con la evaluación?"
         ),
-        "modo_entrada": "texto_libre",
+        "modo_entrada": "mixto",
         "sugerencias": ["Sí, estoy de acuerdo", "No, prefiero no continuar"]
     }
 
@@ -49,7 +49,7 @@ def obtener_mensaje_identidad(nombre_usuario: str) -> dict:
             "¿Qué etiqueta identifica mejor tu identidad?\n\n"
             "Puedes responder libremente, por ejemplo: 'Masculino', 'Femenino' o 'No binario'."
         ),
-        "modo_entrada": "texto_libre",
+        "modo_entrada": "mixto",
         "sugerencias": ["Masculino", "Femenino", "No binario"]
     }
 
@@ -63,7 +63,7 @@ def obtener_mensaje_exploracion_tristeza(nombre_usuario: str) -> dict:
             "Para empezar, ¿dirías que has sentido tristeza o bajones emocionales en los últimos días?\n\n"
             "Puedes responder, por ejemplo: 'Sí, me he sentido muy triste' o 'No, en general me he sentido bien'."
         ),
-        "modo_entrada": "texto_libre",
+        "modo_entrada": "mixto",
         "sugerencias": ["Sí, me he sentido triste", "No, me he sentido bien", "No estoy seguro"]
     }
 
@@ -73,18 +73,20 @@ def obtener_mensaje_frecuencia_tristeza() -> dict:
         "estado": "frecuencia_tristeza",
         "mensaje": (
             "Gracias por compartirlo. Ahora me gustaría saber con qué frecuencia sueles experimentar esa tristeza.\n\n"
-            "No es necesario que la respuesta sea exacta, solo una idea general. Puedes usar expresiones como:\n"
-            "'Todos los días', 'Muy seguido', 'De vez en cuando', 'Casi nunca', etc."
+            "Selecciona la opción que mejor refleje tu experiencia. No te preocupes por ser exacto, solo una estimación general."
         ),
-        "modo_entrada": "texto_libre",
+        "modo_entrada": "sugerencias",  # Solo se permite elegir
         "sugerencias": [
-            "Todos los días [10]",
-            "Muy seguido [8]",
-            "A menudo [7]",
-            "De vez en cuando [5]",
-            "Pocas veces [3]",
-            "Casi nunca [2]",
-            "Nunca [1]"
+            "Todos los días",
+            "Casi todos los días",
+            "Muy seguido",
+            "A menudo",
+            "Algunas veces por semana",
+            "De vez en cuando",
+            "Con poca frecuencia",
+            "Pocas veces",
+            "Casi nunca",
+            "Nunca"
         ]
     }
 
@@ -94,10 +96,9 @@ def obtener_mensaje_duracion_tristeza() -> dict:
         "estado": "duracion_tristeza",
         "mensaje": (
             "Gracias por compartirlo. Me gustaría saber cuánto tiempo suele durarte esa tristeza cuando aparece.\n\n"
-            "Puede durar unos instantes, horas, días o incluso semanas. No te preocupes por ser preciso, con una estimación basta.\n"
-            "Por ejemplo: 'Unas horas', 'Un par de días', 'Una semana', 'Más de un mes', etc."
+            "Selecciona una opción que refleje lo que sueles experimentar."
         ),
-        "modo_entrada": "texto_libre",
+        "modo_entrada": "sugerencias",  # Solo se permite elegir
         "sugerencias": [
             "Unas horas [2]",
             "Un día [3]",
@@ -118,13 +119,11 @@ def obtener_mensaje_intensidad_tristeza() -> dict:
             "Puedes usar una escala del 1 (muy leve) al 10 (muy intensa), o expresarlo de forma aproximada, como:\n"
             "'Creo que un 3', 'Más o menos un 7', 'Entre 8 y 9', etc."
         ),
-        "modo_entrada": "texto_libre",
+        "modo_entrada": "mixto",
         "sugerencias": ["3", "5", "8", "10"]
     }
 
-
 # -------------------- Síntomas físicos y conductuales --------------------
-
 def obtener_mensaje_anhedonia() -> dict:
     return {
         "estado": "preguntar_anhedonia",
@@ -133,7 +132,7 @@ def obtener_mensaje_anhedonia() -> dict:
             "¿Has notado si en los últimos días has perdido el interés o el placer en algunas actividades que solías disfrutar?\n\n"
             "Puedes responder, por ejemplo: 'Sí, ya no disfruto de algunas cosas' o 'No, sigo disfrutando igual'."
         ),
-        "modo_entrada": "texto_libre",
+        "modo_entrada": "mixto",
         "sugerencias": ["Sí, he perdido interés", "No, sigo disfrutando igual"]
     }
 
@@ -144,7 +143,7 @@ def obtener_mensaje_anhedonia_profunda() -> dict:
             "Gracias por compartirlo. ¿Podrías decirme qué actividades específicas has dejado de disfrutar recientemente?\n"
             "Esto me ayuda a entender mejor en qué áreas has notado el cambio."
         ),
-        "modo_entrada": "texto_libre",
+        "modo_entrada": "mixto",
         "sugerencias": ["Salir con amigos", "Escuchar música", "Hacer deporte"]
     }
 
@@ -155,10 +154,9 @@ def obtener_mensaje_desesperanza() -> dict:
             "Cuando piensas en el futuro, ¿te resulta difícil encontrar algo que te ilusione o motive?\n\n"
             "Puedes responder con sinceridad, por ejemplo: 'Sí, últimamente nada me motiva' o 'No, tengo cosas que me ilusionan'."
         ),
-        "modo_entrada": "texto_libre",
+        "modo_entrada": "mixto",
         "sugerencias": ["Sí, me cuesta ver el futuro con ilusión", "No, tengo metas", "No estoy seguro"]
     }
-
 
 def obtener_mensaje_inutilidad() -> dict:
     return {
@@ -168,7 +166,7 @@ def obtener_mensaje_inutilidad() -> dict:
             "¿En los últimos días has sentido que no eres suficiente?\n\n"
             "Puedes responder, por ejemplo: 'Sí, a veces me siento así' o 'No, no me ha pasado'."
         ),
-        "modo_entrada": "texto_libre",
+        "modo_entrada": "mixto",
         "sugerencias": [
             "Sí, me ha pasado",
             "No, no me ha pasado",
@@ -183,31 +181,32 @@ def obtener_detalle_inutilidad() -> dict:
             "Lamento que hayas tenido esa sensación. Gracias por compartirlo.\n\n"
             "¿En qué situaciones se te viene normalmente este pensamiento a la cabeza?"
         ),
-        "modo_entrada": "texto_libre",
+        "modo_entrada": "mixto",
         "sugerencias": ["Cuando me equivoco", "Cuando me comparo", "Cuando estoy solo/a"]
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
+def obtener_mensaje_ideacion_suicida() -> dict:
+    return {
+        "estado": "preguntar_ideacion_suicida",
+        "mensaje": (
+            "Sé que esta es una pregunta difícil, pero es importante poder hablar de ello.\n\n"
+            "En las últimas dos semanas, ¿has tenido pensamientos de suicidio?\n"
+            "Por ejemplo, algunas personas piensan que sería mejor no estar aquí, que la vida no merece la pena, o incluso piensan en hacerse daño.\n\n"
+            "Puedes responder con sinceridad. Estoy aquí para escucharte sin juzgar."
+        ),
+        "modo_entrada": "mixto",
+        "sugerencias": [
+            "No, en ningún momento",
+            "Sí, pero sin intención de hacerme daño",
+            "Sí, pensé en hacerme daño, pero no tengo intención",
+            "Sí, pensé en hacerme daño y tengo un plan"
+        ]
+    }
 
 def obtener_mensaje_esperar_siguiente_pregunta() -> dict:
     return {
         "estado": "esperar_siguiente_pregunta",
-        "mensaje": (
-            "Gracias por contármelo. Ser tan duros con nosotros mismos puede aumentar el malestar, "
-            "y reconocerlo es un paso valiente hacia el cuidado personal.\n\n"
-            "Seguiremos con la siguiente pregunta en cuanto esté lista para ti."
-        ),
+        "mensaje": "",
         "modo_entrada": "texto_libre",
         "sugerencias": []
     }

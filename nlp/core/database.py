@@ -46,22 +46,30 @@ def guardar_interaccion_completa(
     session_id: str,
     estado: str,
     pregunta: str,
-    respuesta_usuario: str
+    respuesta_usuario: str,
+    puntuacion: Optional[int] = None
 ) -> None:
-    emocion_detectada = analizar_sentimiento(respuesta_usuario).get(
-        "estado_emocional", "pendiente").lower()
-    
-    # Extraer la puntuación específica según el estado
-    puntuaciones = obtener_puntuaciones(session_id)
-    tipo = None
-    if estado == "preguntar_frecuencia":
-        tipo = "frecuencia"
-    elif estado == "preguntar_duracion":
-        tipo = "duracion"
-    elif estado == "intensidad_tristeza":
-        tipo = "intensidad"
+    resultado_emocional = analizar_sentimiento(respuesta_usuario)
 
-    puntuacion = puntuaciones.get(tipo, 0) if tipo else 0
+    emocion_detectada = resultado_emocional.get("estado_emocional", "pendiente").lower()
+    confianza_emocion = resultado_emocional.get("confianza", "0%")
+
+    # Si no se proporciona puntuación, intentar recuperarla automáticamente
+    if puntuacion is None:
+        puntuaciones = obtener_puntuaciones(session_id)
+
+        tipo_estado_a_clave = {
+            "preguntar_frecuencia": "frecuencia",
+            "preguntar_duracion": "duracion",
+            "intensidad_tristeza": "intensidad",
+            "preguntar_desesperanza": "desesperanza",
+            "preguntar_inutilidad": "inutilidad",
+            "preguntar_ideacion_suicida": "ideacion",
+            "preguntar_anhedonia": "anhedonia"
+        }
+
+        tipo = tipo_estado_a_clave.get(estado)
+        puntuacion = puntuaciones.get(tipo, 0) if tipo else 0
 
     doc = {
         "session_id": session_id,
@@ -69,6 +77,7 @@ def guardar_interaccion_completa(
         "pregunta": pregunta,
         "respuesta_usuario": respuesta_usuario,
         "emocion": emocion_detectada,
+        "confianza_emocion": confianza_emocion,
         "puntuacion": puntuacion,
         "timestamp": datetime.now(timezone.utc)
     }

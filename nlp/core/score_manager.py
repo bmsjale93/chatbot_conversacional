@@ -20,50 +20,6 @@ except redis.exceptions.ConnectionError:
 
 # -------------------- Diccionarios de patrones --------------------
 
-FRECUENCIA_PATRONES = {
-    10: [
-        "todos los días", "cada día", "diariamente", "a diario", "todos los santos días",
-        "día tras día", "sin excepción", "cada jornada", "cada jornada sin fallo"
-    ],
-    9: [
-        "casi todos los días", "prácticamente cada día", "habitualmente", "con regularidad diaria",
-        "casi a diario", "la mayoría del tiempo", "regularmente"
-    ],
-    8: [
-        "muy seguido", "muy a menudo", "constantemente", "con mucha frecuencia",
-        "frecuencia alta", "días seguidos", "en muchas ocasiones"
-    ],
-    7: [
-        "a menudo", "frecuentemente", "muchos días", "bastantes veces", "con cierta regularidad",
-        "suele pasar a menudo", "varias veces a la semana", "habitual pero no diario"
-    ],
-    6: [
-        "algunas veces por semana", "más de una vez por semana", "la mayoría de los días",
-        "varias veces en la semana", "con cierta frecuencia", "días alternos", "a días sí, a días no"
-    ],
-    5: [
-        "de vez en cuando", "algunos días", "ocasionalmente", "algunas veces", "no muy a menudo",
-        "de forma esporádica", "cada tanto", "en ocasiones"
-    ],
-    4: [
-        "con poca frecuencia", "bastantes días pero no siempre", "con frecuencia moderada",
-        "solo a veces", "algunos días sueltos"
-    ],
-    3: [
-        "pocas veces", "en contadas ocasiones", "muy de vez en cuando", "no suele pasar mucho",
-        "raramente pero ocurre", "de forma muy esporádica"
-    ],
-    2: [
-        "casi nunca", "muy pocas veces", "prácticamente nunca", "una vez en mucho tiempo",
-        "solo una vez últimamente", "casi ni lo noto"
-    ],
-    1: [
-        "nunca", "no recuerdo la última vez", "rara vez", "jamás", "en absoluto",
-        "no me ha pasado", "no ocurre", "no sucede"
-    ]
-}
-
-
 DURACION_PATRONES = {
     10: [
         "semanas completas", "más de un mes", "varios meses", "durante mucho tiempo",
@@ -131,7 +87,19 @@ def calcular_puntuacion(tipo: str, valor: str) -> int:
         return 3
 
     elif tipo == "frecuencia":
-        return buscar_valor_aproximado(valor_normalizado, FRECUENCIA_PATRONES)
+        MAPEO_FRECUENCIA = {
+            "todos los días": 10,
+            "casi todos los días": 9,
+            "muy seguido": 8,
+            "a menudo": 7,
+            "algunas veces por semana": 6,
+            "de vez en cuando": 5,
+            "con poca frecuencia": 4,
+            "pocas veces": 3,
+            "casi nunca": 2,
+            "nunca": 1
+        }
+        return MAPEO_FRECUENCIA.get(valor_normalizado, 1)
 
     elif tipo == "duracion":
         return buscar_valor_aproximado(valor_normalizado, DURACION_PATRONES)

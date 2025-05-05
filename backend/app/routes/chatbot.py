@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from app.models.message import Message
 from app.services.nlp_service import analizar_mensaje
-import traceback  # <-- Añadido para mostrar trazas de error
+import traceback
 
 router = APIRouter()
 
@@ -28,7 +28,8 @@ async def chat_endpoint(mensaje: Message):
         return {
             "mensaje": respuesta.get("mensaje", "Respuesta no disponible."),
             "estado": respuesta.get("estado", "fin"),
-            "sugerencias": respuesta.get("sugerencias", [])
+            "sugerencias": respuesta.get("sugerencias", []),
+            "modo_entrada": respuesta.get("modo_entrada", "texto_libre")
         }
 
     except Exception as e:

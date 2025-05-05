@@ -1,57 +1,97 @@
 # nlp/core/emotion_model.py
-from transformers import pipeline
 from typing import Dict
+import unicodedata
+import re
+import difflib
+from pysentimiento import create_analyzer
 
-# Diccionario para traducir las etiquetas
-MAPEO_EMOCIONES = {
-    "POS": "Positivo",
-    "NEU": "Neutro",
-    "NEG": "Negativo"
+# Emociones esperadas por el sistema (en español)
+EMOCIONES_VALIDAS = [
+    "alegría", "amor", "enojo", "miedo", "tristeza", "sorpresa", "culpa",
+    "vergüenza", "frustración", "ansiedad", "agotamiento", "soledad",
+    "esperanza", "indiferencia", "preocupación", "confusión", "neutral"
+]
+
+# Traducción desde las emociones detectadas por pysentimiento a las del sistema
+TRADUCCION_PYSENTIMIENTO = {
+    "joy": "alegría",
+    "sadness": "tristeza",
+    "anger": "enojo",
+    "fear": "miedo",
+    "surprise": "sorpresa",
+    "disgust": "culpa",
+    "others": "neutral"
 }
 
-# Modelo NLP de HuggingFace (inicialización lazy)
-modelo = None
+# Normalización de emociones válidas para comparación flexible
+EMOCIONES_VALIDAS_NORMALIZADAS = [
+    unicodedata.normalize("NFKD", e).encode("ascii", "ignore").decode("utf-8").lower()
+    for e in EMOCIONES_VALIDAS
+]
 
-def cargar_modelo():
-    global modelo
-    if modelo is None:
-        modelo = pipeline(
-            task="sentiment-analysis",
-            model="pysentimiento/robertuito-sentiment-analysis"
-        )
+# Inicialización del analizador
+try:
+    print("⏳ Cargando modelo pysentimiento (emotion, lang='es')...")
+    modelo = create_analyzer(task="emotion", lang="es")
+    print("✅ Modelo cargado correctamente.")
+except Exception as e:
+    import traceback
+    print("❌ Error detallado al cargar el modelo:")
+    traceback.print_exc()
+    modelo = None
 
 
-def ajustar_emocion(texto: str, resultado_modelo: dict) -> Dict[str, str]:
-    """
-    Ajusta manualmente la emoción basada en reglas personalizadas.
-    """
-    label = resultado_modelo.get("label", "NEU")
-    score = resultado_modelo.get("score", 0)
+def limpiar_texto_emocion(texto: str) -> str:
+    texto = texto.lower().strip()
+    texto = re.sub(r"[^\w\s]", "", texto)
+    texto = unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode("utf-8")
+    return texto
 
-    # Reglas específicas
-    if label == "NEG" and score < 0.85 and "no sé" in texto.lower():
-        label = "NEU"
 
-    return {
-        "estado_emocional": MAPEO_EMOCIONES.get(label, "desconocido"),
-        "confianza": f"{round(score * 100, 1)}%"
-    }
+def fallback_por_similitud(emocion_limpia: str) -> str:
+    coincidencias = difflib.get_close_matches(emocion_limpia, EMOCIONES_VALIDAS_NORMALIZADAS, n=1, cutoff=0.8)
+    if coincidencias:
+        index = EMOCIONES_VALIDAS_NORMALIZADAS.index(coincidencias[0])
+        return EMOCIONES_VALIDAS[index]
+    return "desconocido"
 
 
 def analizar_sentimiento(texto: str) -> Dict[str, str]:
-    """
-    Analiza el sentimiento de un texto y devuelve el estado emocional y la confianza.
-    """
     if not texto.strip():
         return {
             "estado_emocional": "desconocido",
             "confianza": "0%"
         }
 
+    if modelo is None:
+        return {
+            "estado_emocional": "error",
+            "confianza": "0%",
+            "detalle": "Modelo no cargado correctamente."
+        }
+
     try:
-        cargar_modelo()
-        resultado = modelo(texto)[0]
-        return ajustar_emocion(texto, resultado)
+        resultado = modelo.predict(texto)
+        print(f"[DEBUG] Resultado del modelo: {resultado}")
+
+        emocion_detectada = resultado.output.strip().lower()
+        confianza_raw = resultado.probas.get(emocion_detectada, 0.0)
+        confianza = f"{round(confianza_raw * 100)}%"
+
+        emocion_traducida = TRADUCCION_PYSENTIMIENTO.get(emocion_detectada, emocion_detectada)
+        emocion_limpia = limpiar_texto_emocion(emocion_traducida)
+
+        if emocion_limpia in EMOCIONES_VALIDAS_NORMALIZADAS:
+            index = EMOCIONES_VALIDAS_NORMALIZADAS.index(emocion_limpia)
+            emocion_final = EMOCIONES_VALIDAS[index]
+        else:
+            emocion_final = fallback_por_similitud(emocion_limpia)
+
+        return {
+            "estado_emocional": emocion_final,
+            "confianza": confianza
+        }
+
     except Exception as e:
         return {
             "estado_emocional": "error",
