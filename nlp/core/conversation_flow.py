@@ -263,33 +263,44 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
 
         return respuesta, datos_guardados
 
-    # --- Preguntar duración ---
+    # --- Preguntar duración de tristeza ---
     if estado_actual == "preguntar_duracion":
         texto_limpio = limpiar_texto(texto_usuario)
 
-        if texto_usuario not in [
-            "Unas horas [2]",
-            "Un día [3]",
-            "Un par de días [4]",
-            "Una semana [5]",
-            "Dos semanas [6]",
-            "Varias semanas [8]",
-            "Más de un mes [10]"
-        ]:
+        # Lista oficial de sugerencias permitidas
+        OPCIONES_DURACION_VALIDAS = {
+            limpiar_texto("Momentos puntuales"),
+            limpiar_texto("Unas horas"),
+            limpiar_texto("Más de 6 horas"),
+            limpiar_texto("Un día o más"),
+            limpiar_texto("Entre tres y cinco días"),
+            limpiar_texto("Una semana"),
+            limpiar_texto("Poco más de una semana"),
+            limpiar_texto("Dos semanas"),
+            limpiar_texto("Varias semanas"),
+            limpiar_texto("Un mes o más")
+        }
+
+        if texto_limpio not in OPCIONES_DURACION_VALIDAS:
             return generar_respuesta_aclaratoria(estado_actual), datos_guardados
 
         # Detectar emoción
         resultado_emocional = analizar_sentimiento(texto_usuario)
         emocion_detectada = resultado_emocional.get("estado_emocional", "neutral").lower()
 
-        # Guardar info (sin puntuación)
+        # Guardar info y puntuación
         datos_guardados["duracion_tristeza"] = texto_usuario
+        datos_guardados["emocion_duracion"] = emocion_detectada
+
+        puntuacion_duracion = calcular_puntuacion("duracion", texto_usuario)
+        asignar_puntuacion(session_id, "duracion", texto_usuario)
 
         guardar_interaccion_completa(
             session_id=session_id,
             estado=estado_actual,
             pregunta="¿Cuánto tiempo dura generalmente esa tristeza?",
-            respuesta_usuario=texto_usuario
+            respuesta_usuario=texto_usuario,
+            puntuacion=puntuacion_duracion
         )
 
         respuesta_base = dialog_manager.obtener_mensaje_intensidad_tristeza()

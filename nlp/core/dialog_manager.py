@@ -100,13 +100,16 @@ def obtener_mensaje_duracion_tristeza() -> dict:
         ),
         "modo_entrada": "sugerencias",  # Solo se permite elegir
         "sugerencias": [
-            "Unas horas [2]",
-            "Un día [3]",
-            "Un par de días [4]",
-            "Una semana [5]",
-            "Dos semanas [6]",
-            "Varias semanas [8]",
-            "Más de un mes [10]"
+            "Momentos puntuales",
+            "Unas horas",
+            "Más de 6 horas",
+            "Un día o más",
+            "Entre tres y cinco días",
+            "Una semana",
+            "Poco más de una semana",
+            "Dos semanas",
+            "Varias semanas",
+            "Un mes o más"
         ]
     }
 

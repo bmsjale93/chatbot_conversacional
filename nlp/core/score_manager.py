@@ -98,6 +98,21 @@ def calcular_puntuacion(tipo: str, valor: str) -> int:
         return MAPEO_FRECUENCIA.get(valor.strip(), 1)
 
     elif tipo == "duracion":
+        MAPEO_DURACION = {
+            "Momentos puntuales": 1,
+            "Unas horas": 2,
+            "Más de 6 horas": 3,
+            "Un día o más": 4,
+            "Entre tres y cinco días": 5,
+            "Una semana": 6,
+            "Poco más de una semana": 7,
+            "Dos semanas": 8,
+            "Varias semanas": 9,
+            "Un mes o más": 10
+        }
+        return MAPEO_DURACION.get(valor.strip(), 1)
+
+    elif tipo == "duracion":
         return buscar_valor_aproximado(valor.lower().strip(), DURACION_PATRONES)
 
     return 0
