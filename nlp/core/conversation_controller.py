@@ -27,10 +27,12 @@ def gestionar_mensaje(session_id: str, texto_usuario: str) -> Dict:
     Returns:
         dict: Estructura con el nuevo estado, mensaje de respuesta y sugerencias.
     """
-    if not session_id or not texto_usuario:
+    # Solo cancelamos si el session_id es inválido.
+    # Los mensajes vacíos se manejan dentro de procesar_mensaje().
+    if not session_id:
         return {
             "estado": ESTADO_FINAL,
-            "mensaje": "❌ Sesión inválida o mensaje vacío.",
+            "mensaje": "❌ Sesión inválida.",
             "sugerencias": []
         }
 

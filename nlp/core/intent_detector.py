@@ -13,7 +13,9 @@ EXPRESIONES_AFIRMATIVAS = [
     "me parece bien", "estoy listo", "ok", "sigamos", "sí, vamos a seguir", "continúa", "quiero seguir",
     "sí, por favor", "dale", "acepto continuar", "continuemos", "por mi parte sí", "sin problema",
     "vale, sigamos", "estoy de acuerdo", "sigamos por favor", "quiero continuar",
-    "sí, me he sentido triste", "sí, me he sentido muy triste", "sí, últimamente me he sentido triste"
+    "sí, me he sentido triste", "sí, me he sentido muy triste", "sí, últimamente me he sentido triste",
+    "ya no disfruto", "he dejado de disfrutar", "he perdido interés", "me cuesta disfrutar",
+    "no encuentro placer", "no me interesa lo mismo", "no me apetece nada"
 ]
 
 EXPRESIONES_NEGATIVAS = [
@@ -22,11 +24,11 @@ EXPRESIONES_NEGATIVAS = [
     "paso", "no quiero continuar", "prefiero parar", "quiero parar", "quiero terminar", "no sigamos",
     "quiero dejarlo", "dejarlo", "detener", "finalizar", "terminar conversación", "basta",
     "prefiero no seguir", "no deseo continuar", "cancela", "ya no quiero", "deten esto", "me retiro", 
-    "no me he sentido bien"
+    "no me he sentido bien", "sigo disfrutando", "no he perdido interés", "disfruto igual"
 ]
 
-# ------------------ Utilidades opcionales ------------------
-DEBUG = True
+# ------------------ Utilidades ------------------
+DEBUG = False
 
 def normalizar_texto(texto: str) -> str:
     texto = unicodedata.normalize("NFD", texto)
@@ -45,13 +47,21 @@ def detectar_intencion(texto_usuario: str) -> Literal["afirmativo", "negativo", 
         print(f"[DEBUG] Texto original: {texto_usuario}")
         print(f"[DEBUG] Texto normalizado: {texto_normalizado}")
 
-    # Paso 1: Detección exacta
+    # Paso 1: Coincidencia exacta
     if texto_normalizado in EXPRESIONES_AFIRMATIVAS:
         return "afirmativo"
     if texto_normalizado in EXPRESIONES_NEGATIVAS:
         return "negativo"
 
-    # Paso 2: Similitud semántica
+    # Paso 2: Coincidencia por inclusión (frases completas contenidas)
+    for frase in EXPRESIONES_NEGATIVAS:
+        if frase in texto_normalizado:
+            return "negativo"
+    for frase in EXPRESIONES_AFIRMATIVAS:
+        if frase in texto_normalizado:
+            return "afirmativo"
+
+    # Paso 3: Similaridad semántica
     emb_usuario = modelo_similitud.encode(texto_normalizado, convert_to_tensor=True)
     emb_afirmativas = modelo_similitud.encode(EXPRESIONES_AFIRMATIVAS, convert_to_tensor=True)
     emb_negativas = modelo_similitud.encode(EXPRESIONES_NEGATIVAS, convert_to_tensor=True)
@@ -63,9 +73,9 @@ def detectar_intencion(texto_usuario: str) -> Literal["afirmativo", "negativo", 
         print(f"[DEBUG] Similitud afirmativa: {sim_afirmativa:.4f}")
         print(f"[DEBUG] Similitud negativa: {sim_negativa:.4f}")
 
-    if sim_afirmativa > 0.7 and sim_afirmativa > sim_negativa:
+    if sim_afirmativa > 0.75 and sim_afirmativa > sim_negativa + 0.05:
         return "afirmativo"
-    elif sim_negativa > 0.7 and sim_negativa > sim_afirmativa:
+    elif sim_negativa > 0.75 and sim_negativa > sim_afirmativa + 0.05:
         return "negativo"
 
     return "desconocido"

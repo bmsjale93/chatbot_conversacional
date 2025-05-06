@@ -36,18 +36,57 @@ def detectar_emocion(texto_usuario: str) -> str:
 # Constantes de estado
 FIN = "fin"
 ERROR = "error"
+ESTADOS_DIALOG_MANAGER = {
+    "presentacion": dialog_manager.obtener_mensaje_presentacion,
+    "consentimiento": dialog_manager.obtener_mensaje_presentacion,
+    "preguntar_nombre": dialog_manager.obtener_mensaje_nombre,
+    "preguntar_identidad": lambda datos_guardados={}: dialog_manager.obtener_mensaje_identidad(
+        datos_guardados.get("nombre_usuario", "")
+    ),
+    "inicio_exploracion_tristeza": lambda: dialog_manager.obtener_mensaje_exploracion_tristeza(""),
+    "preguntar_frecuencia": dialog_manager.obtener_mensaje_frecuencia_tristeza,
+    "preguntar_duracion": dialog_manager.obtener_mensaje_duracion_tristeza,
+    "intensidad_tristeza": dialog_manager.obtener_mensaje_intensidad_tristeza,
+    "preguntar_anhedonia": dialog_manager.obtener_mensaje_anhedonia,
+    "detalle_anhedonia": dialog_manager.obtener_mensaje_anhedonia_profunda,
+    "preguntar_desesperanza": dialog_manager.obtener_mensaje_desesperanza,
+    "preguntar_inutilidad": dialog_manager.obtener_mensaje_inutilidad,
+    "detalle_inutilidad": dialog_manager.obtener_detalle_inutilidad,
+    "preguntar_ideacion_suicida": dialog_manager.obtener_mensaje_ideacion_suicida,
+    "esperar_siguiente_pregunta": dialog_manager.obtener_mensaje_esperar_siguiente_pregunta,
+}
 
 
 def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, datos_guardados: dict) -> Tuple[dict, dict]:
 
     # --- Validación global de mensaje vacío ---
     if not texto_usuario or not texto_usuario.strip():
+        respuesta_base_fn = ESTADOS_DIALOG_MANAGER.get(estado_actual)
+
+        if respuesta_base_fn:
+            # Comprobar si la función acepta argumentos
+            try:
+                base = respuesta_base_fn(datos_guardados)
+            except TypeError:
+                base = respuesta_base_fn()
+            return {
+                "estado": estado_actual,
+                "mensaje": (
+                    "Por favor, selecciona una opción o escribe algo antes de continuar."
+                ),
+                "modo_entrada": base.get("modo_entrada", "texto_libre"),
+                "sugerencias": base.get("sugerencias", [])
+            }, datos_guardados
+
+        # Fallback genérico si no se encuentra el estado
         return {
             "estado": estado_actual,
-            "mensaje": "Por favor, escribe un mensaje antes de continuar.",
-            "modo_entrada": "texto_libre",
+            "mensaje": "Por favor, escribe algo antes de continuar.",
+            "modo_entrada": "mixto",
             "sugerencias": []
         }, datos_guardados
+
+
 
     # --- Fase de presentación ---
     if estado_actual == "presentacion":
@@ -349,26 +388,37 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
 
 
     # --- APARTADO ANHEDONIA ---
-    # --- Preguntar sobre anhedonia ---
     if estado_actual == "preguntar_anhedonia":
-        texto_limpio = limpiar_texto(texto_usuario)
+        texto_limpio = texto_usuario.strip()
 
-        if detectar_ambiguedad(texto_limpio):
+        # Mapas explícitos de sugerencias
+        respuestas_afirmativas = {"Sí, he perdido interés"}
+        respuestas_negativas = {"No, sigo disfrutando igual"}
+
+        if texto_limpio in respuestas_afirmativas:
+            intencion = "afirmativo"
+        elif texto_limpio in respuestas_negativas:
+            intencion = "negativo"
+        elif detectar_ambiguedad(texto_limpio):
             return generar_respuesta_aclaratoria(estado_actual), datos_guardados
-
-        intencion = detectar_intencion(texto_limpio)
+        else:
+            intencion = detectar_intencion(texto_usuario)
 
         # Detectar emoción
         resultado_emocional = analizar_sentimiento(texto_usuario)
         emocion_detectada = resultado_emocional.get("estado_emocional", "neutral").lower()
+        confianza_emocion = resultado_emocional.get("confianza", "0%")
 
         if intencion == "afirmativo":
-            datos_guardados["anhedonia"] = True
-            asignar_puntuacion(session_id, "anhedonia", "1")
             puntuacion = 1
+            datos_guardados["anhedonia"] = True
+            datos_guardados["emocion_anhedonia"] = emocion_detectada
+            datos_guardados["puntuacion_anhedonia"] = puntuacion
+
+            asignar_puntuacion(session_id, "anhedonia", str(puntuacion))
 
             mensaje_base = dialog_manager.obtener_mensaje_anhedonia_profunda()["mensaje"]
-            mensaje_empatico = generar_respuesta_empatica(mensaje_base, tipo=emocion_detectada)
+            mensaje_empatico = generar_respuesta_empatica(mensaje_base, tipo="anhedonia")
 
             respuesta = {
                 "estado": "detalle_anhedonia",
@@ -378,17 +428,28 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             }
 
         elif intencion == "negativo":
-            datos_guardados["anhedonia"] = False
-            asignar_puntuacion(session_id, "anhedonia", "0")
             puntuacion = 0
+            datos_guardados["anhedonia"] = False
+            datos_guardados["emocion_anhedonia"] = emocion_detectada
+            datos_guardados["puntuacion_anhedonia"] = puntuacion
+
+            asignar_puntuacion(session_id, "anhedonia", str(puntuacion))
+
+            mensaje_base = (
+                "Me alegra saber que sigues disfrutando de tus actividades."
+            )
+            mensaje_empatico = generar_respuesta_empatica(mensaje_base, tipo=emocion_detectada)
+
+            # Obtenemos la siguiente pregunta
+            siguiente = dialog_manager.obtener_mensaje_desesperanza()
+
             respuesta = {
-                "estado": "preguntar_desesperanza",
-                "mensaje": (
-                    "Me alegra saber que sigues disfrutando de tus actividades. Continuemos con la siguiente pregunta."
-                ),
-                "modo_entrada": "texto_libre",
-                "sugerencias": []
+                "estado": siguiente["estado"],
+                "mensaje": f"{mensaje_empatico}\n\n{siguiente['mensaje']}",
+                "modo_entrada": siguiente.get("modo_entrada", "texto_libre"),
+                "sugerencias": siguiente.get("sugerencias", [])
             }
+
         else:
             return generar_respuesta_aclaratoria(estado_actual), datos_guardados
 
@@ -401,6 +462,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         )
 
         return respuesta, datos_guardados
+
 
 
     # --- Detalle actividades con anhedonia ---

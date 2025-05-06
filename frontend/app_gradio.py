@@ -24,13 +24,11 @@ def enviar_mensaje(mensaje_usuario, historial, session_id):
     global conversacion_activa
 
     mensaje_usuario = mensaje_usuario.strip() if mensaje_usuario else ""
+    mensaje_mostrado = mensaje_usuario if mensaje_usuario else "(entrada vacía)"
 
     if not conversacion_activa:
         historial.append({"role": "system", "content": "La conversación ha finalizado. Reinicia para comenzar de nuevo."})
         return historial, session_id, gr.update(visible=True), gr.update(visible=False)
-
-    if not mensaje_usuario:
-        return historial, session_id, gr.update(value="", interactive=True), gr.update(interactive=False)
 
     try:
         response = requests.post(
@@ -40,26 +38,37 @@ def enviar_mensaje(mensaje_usuario, historial, session_id):
         )
         response.raise_for_status()
         data = response.json()
+        print("[DEBUG] Respuesta del backend:", data)
 
         mensaje_asistente = data.get("mensaje", "Respuesta no disponible en este momento.")
         estado = data.get("estado", "")
         sugerencias = data.get("sugerencias", [])
         modo_entrada = data.get("modo_entrada", "texto_libre")
 
-        historial.append({"role": "user", "content": mensaje_usuario})
+        # Registrar siempre la entrada del usuario (aunque esté vacía)
+        historial.append({"role": "user", "content": mensaje_mostrado})
         historial.append({"role": "assistant", "content": mensaje_asistente})
 
         if estado == "fin":
             conversacion_activa = False
 
         mostrar_texto = modo_entrada in ["texto_libre", "mixto"]
-        mostrar_dropdown = bool(sugerencias)
+        mostrar_dropdown = modo_entrada in ["mixto", "sugerencias"] and bool(sugerencias)
+
+        print("[DEBUG] modo_entrada:", modo_entrada)
+        print("[DEBUG] sugerencias:", sugerencias)
+        print("[DEBUG] mostrar_dropdown:", mostrar_dropdown)
 
         return (
             historial,
             session_id,
             gr.update(visible=mostrar_texto, value="", interactive=mostrar_texto),
-            gr.update(visible=mostrar_dropdown, choices=sugerencias, value=None, interactive=mostrar_dropdown)
+            gr.update(
+                visible=mostrar_dropdown,
+                choices=sugerencias if mostrar_dropdown else [],
+                value=None,
+                interactive=mostrar_dropdown
+            )
         )
 
     except requests.exceptions.RequestException as e:
@@ -69,6 +78,7 @@ def enviar_mensaje(mensaje_usuario, historial, session_id):
     except Exception as e:
         historial.append({"role": "system", "content": f"Ocurrió un error inesperado: {e}"})
         return historial, session_id, gr.update(visible=True), gr.update(visible=False)
+
 
 # ------------------- Cargar historial -------------------
 def cargar_historial(session_id):
@@ -106,8 +116,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as interfaz:
     ---
     Este asistente conversacional está diseñado para ayudarte a reflexionar sobre tu estado emocional.  
     Puedes detener la conversación en cualquier momento.
-    """
-    )
+    """)
 
     with gr.Row(equal_height=True):
         with gr.Column(scale=3):
@@ -179,7 +188,6 @@ with gr.Blocks(theme=gr.themes.Soft()) as interfaz:
             }
         """
     )
-
 
 # ------------------- Lanzar -------------------
 if __name__ == "__main__":

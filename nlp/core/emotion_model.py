@@ -9,7 +9,7 @@ from pysentimiento import create_analyzer
 EMOCIONES_VALIDAS = [
     "alegría", "amor", "enojo", "miedo", "tristeza", "sorpresa", "culpa",
     "vergüenza", "frustración", "ansiedad", "agotamiento", "soledad",
-    "esperanza", "indiferencia", "preocupación", "confusión", "neutral"
+    "esperanza", "indiferencia", "preocupación", "confusión", "neutral", "anhedonia"
 ]
 
 # Traducción desde las emociones detectadas por pysentimiento a las del sistema

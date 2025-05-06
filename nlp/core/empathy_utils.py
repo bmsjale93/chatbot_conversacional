@@ -166,7 +166,11 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
                 "¿Dirías que has notado esa pérdida de interés o placer?"
             ),
             "modo_entrada": "texto_libre",
-            "sugerencias": ["Sí, he perdido interés", "No, sigo disfrutando igual", "No lo sé"]
+            "sugerencias": [
+                "Sí, he perdido interés",
+                "No, sigo disfrutando igual",
+                "No lo sé"
+            ]
         }
 
     if estado_actual == "preguntar_desesperanza":
@@ -244,76 +248,70 @@ def generar_respuesta_empatica(mensaje_base: str, tipo: str = "neutral") -> str:
 
     frases_empaticas = {
         "tristeza": (
-            "Lamento que estés atravesando momentos difíciles. Sentirse triste es humano y hablar de ello es un acto de valentía. "
-            "Estoy aquí para acompañarte mientras lo compartes. "
+            "Gracias por compartir cómo te sientes. La tristeza es una emoción válida, y no tienes que atravesarla solo/a. "
+            "Estoy aquí contigo, para escucharte y acompañarte sin juicio. "
+        ),
+        "anhedonia": (
+            "Perder el interés por cosas que antes disfrutabas puede sentirse desconcertante. No estás solo/a en esto, y hablarlo es un paso importante para entenderte mejor. "
         ),
         "alegría": (
-            "Qué maravilloso que experimentes alegría. Reconocer y disfrutar estos momentos es esencial para nuestro bienestar emocional. "
-            "Gracias por compartirlo. "
+            "Qué bonito que lo sientas así. Reconocer las emociones positivas también forma parte del cuidado emocional. "
+            "Me alegra poder compartir este momento contigo. "
         ),
         "amor": (
-            "Sentirse amado/a o experimentar afecto profundo puede reconfortar el alma. "
-            "Me alegra saber que ese sentimiento está presente en ti. "
+            "El amor y el afecto pueden darnos una base muy profunda de apoyo. Me alegra saber que formas parte de ese vínculo. "
         ),
         "enojo": (
-            "Percibo que algo te ha generado molestia o rabia. Es totalmente válido sentirse así ante ciertas situaciones. "
-            "Gracias por expresarlo con sinceridad. "
+            "Sentirse molesto o enfadado es completamente humano. Aquí puedes expresar eso sin miedo a ser juzgado/a. "
         ),
         "miedo": (
-            "El miedo puede llegar a ser paralizante, pero compartirlo ya es un gran paso para gestionarlo. "
-            "No estás solo/a enfrentándolo. "
-        ),
-        "sorpresa": (
-            "Veo que has experimentado algo inesperado. La sorpresa forma parte de nuestra vida emocional, "
-            "y a veces nos deja con muchas sensaciones por procesar. "
-        ),
-        "culpa": (
-            "La culpa puede ser una emoción muy pesada. Hablar de ella y reconocerla es un acto importante de cuidado emocional. "
+            "El miedo puede hacernos sentir vulnerables, pero ponerlo en palabras ya es un paso valiente hacia el cuidado. "
             "Gracias por confiar en este espacio. "
         ),
+        "sorpresa": (
+            "A veces lo inesperado nos descoloca, y está bien tomarse un momento para procesarlo. Estoy aquí para ayudarte a darle sentido. "
+        ),
+        "culpa": (
+            "La culpa puede pesar mucho. Hablarla y explorarla con amabilidad puede ayudarte a soltar parte de esa carga. "
+            "Gracias por permitírmelo. "
+        ),
         "vergüenza": (
-            "Comprendo que compartir lo que nos avergüenza puede resultar difícil. "
-            "Tu sinceridad es valiosa y demuestra una gran fortaleza interna. "
+            "Sé que no es fácil compartir lo que nos hace sentir expuestos. Tu apertura es valiosa y muy valiente. "
+            "Gracias por confiar. "
         ),
         "frustración": (
-            "La frustración aparece cuando sentimos que algo escapa a nuestro control. "
-            "Expresarla puede aliviar esa tensión acumulada. Estoy aquí para escucharte sin juicios. "
+            "La frustración suele aparecer cuando sentimos que algo escapa a nuestro control. Aquí tienes un espacio seguro para explorar eso. "
         ),
         "ansiedad": (
-            "La ansiedad puede ser abrumadora y agotadora. Reconocerla y compartirla es ya un gran paso hacia el alivio. "
-            "Gracias por tu confianza. "
+            "La ansiedad puede resultar abrumadora. No estás solo/a en esto, y compartirlo puede ser el primer paso hacia el alivio. "
         ),
         "agotamiento": (
-            "Siento que estás atravesando un periodo de mucho desgaste. El cansancio profundo también merece ser escuchado y atendido. "
-            "Gracias por expresarlo. "
+            "Estar emocional o físicamente agotado/a no es señal de debilidad, sino de que has estado haciendo frente a mucho. "
+            "Reconocerlo es parte del autocuidado. "
         ),
         "soledad": (
-            "La soledad puede sentirse muy intensa. Saber que lo estás compartiendo me permite estar más cerca de lo que estás viviendo. "
-            "Gracias por abrirte. "
+            "Sentirse solo/a puede ser una experiencia muy profunda. Estoy aquí para acompañarte en ese sentimiento. "
         ),
         "esperanza": (
-            "La esperanza es una fuerza poderosa que nos impulsa a seguir adelante. Me alegra saber que la mantienes viva. "
-            "Nunca dejes de aferrarte a ella. "
+            "Sentir esperanza, incluso en momentos difíciles, es un recurso interno muy valioso. Me alegra que la mantengas presente. "
         ),
         "indiferencia": (
-            "Sentirse apagado o indiferente también forma parte de nuestros procesos emocionales. "
-            "Gracias por reconocerlo. Estoy aquí contigo. "
+            "A veces sentimos que nada nos afecta. Esa desconexión también merece ser escuchada con atención y cuidado. "
         ),
         "preocupación": (
-            "Parece que hay algo que te inquieta. Puedes contar conmigo para compartir esas preocupaciones y aliviar un poco su peso. "
+            "Siento que hay algo que te tiene inquieto/a. Podemos ir deshilando eso poco a poco, sin prisa. "
         ),
         "confusión": (
-            "Sentirse confundido es completamente comprensible, especialmente en momentos de cambio o malestar. "
-            "Vamos poco a poco, con calma. "
+            "Estar confundido/a es natural cuando atravesamos cosas intensas. Vamos a tratar de encontrar algo de claridad juntos/as. "
         ),
         "neutral": (
-            "Gracias por compartir tu experiencia emocional. Sea cual sea, tiene valor y merece ser escuchada. "
+            "Gracias por compartir tu experiencia, sea cual sea. Todo lo que sientas tiene un lugar aquí. "
         ),
         "positivo": (
-            "Es reconfortante saber que te sientes bien. Agradezco que compartas ese estado conmigo. "
-            "Disfrútalo plenamente, lo mereces. "
+            "Es bueno saber que te sientes en equilibrio. Celebro ese momento contigo, y me alegra que lo compartas. "
         )
     }
+
 
 
     frase_intro = frases_empaticas.get(tipo, "Gracias por compartir cómo te sientes. ")

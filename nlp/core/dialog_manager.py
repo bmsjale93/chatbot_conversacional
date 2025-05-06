@@ -135,14 +135,19 @@ def obtener_mensaje_anhedonia() -> dict:
             "Puedes responder, por ejemplo: 'Sí, ya no disfruto de algunas cosas' o 'No, sigo disfrutando igual'."
         ),
         "modo_entrada": "mixto",
-        "sugerencias": ["Sí, he perdido interés", "No, sigo disfrutando igual"]
+        "sugerencias": [
+            "Sí, he perdido interés",
+            "No, sigo disfrutando igual",
+            "No lo sé"
+        ]
     }
+
 
 def obtener_mensaje_anhedonia_profunda() -> dict:
     return {
         "estado": "detalle_anhedonia",
         "mensaje": (
-            "Gracias por compartirlo. ¿Podrías decirme qué actividades específicas has dejado de disfrutar recientemente?\n"
+            "¿Podrías decirme qué actividades específicas has dejado de disfrutar recientemente?\n"
             "Esto me ayuda a entender mejor en qué áreas has notado el cambio."
         ),
         "modo_entrada": "mixto",
