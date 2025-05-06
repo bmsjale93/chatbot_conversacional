@@ -76,9 +76,11 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
 
         return respuesta, datos_guardados
 
-
     # --- Preguntar nombre ---
     if estado_actual == "preguntar_nombre":
+        if detectar_ambiguedad(texto_usuario):
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
         nombre_usuario = extraer_nombre(texto_usuario)
         datos_guardados["nombre_usuario"] = nombre_usuario
 
@@ -86,13 +88,12 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             session_id=session_id,
             estado=estado_actual,
             pregunta="¿Con qué nombre o seudónimo puedo dirigirme a ti?",
-            respuesta_usuario=texto_usuario
+            respuesta_usuario=nombre_usuario
         )
 
         respuesta = dialog_manager.obtener_mensaje_identidad(nombre_usuario)
         respuesta["estado"] = "preguntar_identidad"
         return respuesta, datos_guardados
-
 
     # --- Preguntar identidad ---
     if estado_actual == "preguntar_identidad":

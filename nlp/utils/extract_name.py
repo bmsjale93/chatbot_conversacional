@@ -29,8 +29,8 @@ BASE_DIR = os.path.dirname(__file__)
 
 def cargar_nombres_validos() -> set:
     try:
-        df_female = pd.read_csv(os.path.join(BASE_DIR, "female_names.csv"))
-        df_male = pd.read_csv(os.path.join(BASE_DIR, "male_names.csv"))
+        df_female = pd.read_csv(os.path.join(BASE_DIR, "female_names.csv"), header=None, names=["name", "frequency", "mean_age"])
+        df_male = pd.read_csv(os.path.join(BASE_DIR, "male_names.csv"), header=None, names=["name", "frequency", "mean_age"])
 
         nombres_f = df_female["name"].astype(str).str.strip().str.lower()
         nombres_m = df_male["name"].astype(str).str.strip().str.lower()
@@ -58,9 +58,9 @@ def extraer_nombre(texto: str, modelo_spacy: Optional[spacy.language.Language] =
 
     texto_normalizado = normalizar(texto)
 
-    # -------- 1. Regex con frases comunes (más rápido) --------
+    # -------- 1. Regex con frases comunes --------
     patrones = [
-        r"(?:me llamo|soy|ll[aá]mame|puedes llamarme)\s+([A-ZÁÉÍÓÚÑa-záéíóúñü]+)",
+        r"(?:me llamo|soy|ll[aá]mame|puedes llamarme|me puedes llamar|puedes llamarme)\s+([A-ZÁÉÍÓÚÑa-záéíóúñü]+)",
         r"^([A-ZÁÉÍÓÚÑa-záéíóúñü]{2,})$"
     ]
     for patron in patrones:
@@ -69,6 +69,8 @@ def extraer_nombre(texto: str, modelo_spacy: Optional[spacy.language.Language] =
             candidato = normalizar(match.group(1))
             if candidato in NOMBRES_VALIDOS:
                 return candidato.capitalize()
+            else:
+                return match.group(1).capitalize()
 
     # -------- 2. Fallback: primer token válido --------
     tokens = texto.split()
@@ -76,9 +78,14 @@ def extraer_nombre(texto: str, modelo_spacy: Optional[spacy.language.Language] =
         primer_token = normalizar(tokens[0])
         if primer_token in NOMBRES_VALIDOS:
             return primer_token.capitalize()
-        # Si sólo hay una palabra, devolverla directamente
-        if len(tokens) == 1:
-            return tokens[0].capitalize()
+
+        if len(tokens) >= 2:
+            segundo_token = normalizar(tokens[1])
+            if segundo_token in NOMBRES_VALIDOS:
+                return segundo_token.capitalize()
+
+        # Si sólo hay una palabra, devuélvela igual
+        return tokens[0].capitalize()
 
     # -------- 3. NER con spaCy (último recurso) --------
     if modelo_spacy is None:
@@ -91,6 +98,8 @@ def extraer_nombre(texto: str, modelo_spacy: Optional[spacy.language.Language] =
                 candidato = ent.text.strip().split()[0].lower()
                 if candidato in NOMBRES_VALIDOS:
                     return candidato.capitalize()
+                else:
+                    return ent.text.strip().split()[0].capitalize()
     except Exception as e:
         print(f"⚠️ Error usando spaCy: {e}")
 

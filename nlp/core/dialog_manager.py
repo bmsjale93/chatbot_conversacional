@@ -34,7 +34,7 @@ def obtener_mensaje_nombre() -> dict:
         "estado": "preguntar_nombre",
         "mensaje": (
             "¿Con qué nombre o seudónimo puedo dirigirme a ti?\n\n"
-            "Puedes escribirme tu nombre real o cualquier nombre con el que te sientas cómodo/a, por ejemplo: 'Alejandro', 'María', 'Alex'."
+            "Puedes escribirme tu nombre real o cualquier nombre con el que te sientas cómodo/a, por ejemplo: 'Alejandro', 'María', 'Juan'."
         ),
         "modo_entrada": "texto_libre",
         "sugerencias": []

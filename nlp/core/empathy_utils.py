@@ -81,6 +81,17 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
             "sugerencias": ["Masculino", "Femenino", "No binario"]
         }
 
+    if estado_actual == "preguntar_nombre":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "Está bien si no lo tienes claro. Puedes escribirme tu nombre real o un seudónimo con el que te sientas cómodo/a.\n\n"
+                "Por ejemplo: 'Alejandro', 'Luna', 'Alex'."
+            ),
+            "modo_entrada": "texto_libre",
+            "sugerencias": []
+        }
+
     if estado_actual == "inicio_exploracion_tristeza":
         return {
             "estado": estado_actual,
