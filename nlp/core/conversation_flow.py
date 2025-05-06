@@ -6,7 +6,8 @@ from core.intent_detector import detectar_intencion
 from core.score_manager import (
     asignar_puntuacion,
     obtener_puntuaciones,
-    generar_resumen_evaluacion
+    generar_resumen_evaluacion,
+    calcular_puntuacion
 )
 from core.empathy_utils import (
     detectar_ambiguedad,
@@ -241,13 +242,15 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         # Guardar información y puntuación
         datos_guardados["frecuencia_tristeza"] = texto_usuario
         datos_guardados["emocion_frecuencia"] = emocion_detectada
-        asignar_puntuacion(session_id, "frecuencia", texto_limpio)
+        puntuacion_frecuencia = calcular_puntuacion("frecuencia", texto_usuario)
+        asignar_puntuacion(session_id, "frecuencia", texto_usuario)
 
         guardar_interaccion_completa(
             session_id=session_id,
             estado=estado_actual,
             pregunta="¿Con qué frecuencia sueles experimentar tristeza?",
-            respuesta_usuario=texto_usuario
+            respuesta_usuario=texto_usuario,
+            puntuacion=puntuacion_frecuencia
         )
 
         respuesta_base = dialog_manager.obtener_mensaje_duracion_tristeza()

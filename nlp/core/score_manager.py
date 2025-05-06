@@ -3,7 +3,6 @@ import os
 import json
 import re
 from typing import Optional
-from core.cleaner import limpiar_texto
 
 # -------------------- Configuración de Redis --------------------
 
@@ -64,8 +63,6 @@ DURACION_PATRONES = {
     ]
 }
 
-
-
 # -------------------- Funciones de cálculo --------------------
 
 def buscar_valor_aproximado(valor_usuario: str, patrones: dict) -> int:
@@ -77,32 +74,31 @@ def buscar_valor_aproximado(valor_usuario: str, patrones: dict) -> int:
     return 1  # Por defecto, la mínima puntuación
 
 def calcular_puntuacion(tipo: str, valor: str) -> int:
-    valor_normalizado = limpiar_texto(valor.lower().strip())
-
     if tipo == "intensidad":
-        coincidencias = re.findall(r"\b([1-9]|10)\b", valor_normalizado)
+        coincidencias = re.findall(r"\b([1-9]|10)\b", valor)
         if coincidencias:
             n = int(coincidencias[0])
             return 9 if n >= 8 else 6 if n >= 4 else 3
         return 3
 
     elif tipo == "frecuencia":
+        # No se limpia, porque se selecciona directamente de sugerencias exactas
         MAPEO_FRECUENCIA = {
-            "todos los días": 10,
-            "casi todos los días": 9,
-            "muy seguido": 8,
-            "a menudo": 7,
-            "algunas veces por semana": 6,
-            "de vez en cuando": 5,
-            "con poca frecuencia": 4,
-            "pocas veces": 3,
-            "casi nunca": 2,
-            "nunca": 1
+            "Todos los días": 10,
+            "Casi todos los días": 9,
+            "Muy seguido": 8,
+            "A menudo": 7,
+            "Algunas veces por semana": 6,
+            "De vez en cuando": 5,
+            "Con poca frecuencia": 4,
+            "Pocas veces": 3,
+            "Casi nunca": 2,
+            "Nunca": 1
         }
-        return MAPEO_FRECUENCIA.get(valor_normalizado, 1)
+        return MAPEO_FRECUENCIA.get(valor.strip(), 1)
 
     elif tipo == "duracion":
-        return buscar_valor_aproximado(valor_normalizado, DURACION_PATRONES)
+        return buscar_valor_aproximado(valor.lower().strip(), DURACION_PATRONES)
 
     return 0
 
