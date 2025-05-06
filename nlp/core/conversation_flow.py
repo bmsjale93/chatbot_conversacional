@@ -318,7 +318,10 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
     if estado_actual == "intensidad_tristeza":
         texto_limpio = limpiar_texto(texto_usuario)
 
-        if detectar_ambiguedad(texto_limpio):
+        # Lista oficial permitida
+        OPCIONES_INTENSIDAD_VALIDAS = {str(i) for i in range(1, 11)}
+
+        if texto_limpio not in OPCIONES_INTENSIDAD_VALIDAS:
             return generar_respuesta_aclaratoria(estado_actual), datos_guardados
 
         # Detectar emoción
@@ -327,18 +330,23 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
 
         # Guardar puntuación y respuesta
         datos_guardados["intensidad_tristeza"] = texto_usuario
-        asignar_puntuacion(session_id, "intensidad", texto_limpio)
+        datos_guardados["emocion_intensidad"] = emocion_detectada
+
+        puntuacion_intensidad = calcular_puntuacion("intensidad", texto_usuario)
+        asignar_puntuacion(session_id, "intensidad", texto_usuario)
 
         guardar_interaccion_completa(
             session_id=session_id,
             estado=estado_actual,
             pregunta="Cuando sientes tristeza, ¿cómo de intensa es?",
-            respuesta_usuario=texto_usuario
+            respuesta_usuario=texto_usuario,
+            puntuacion=puntuacion_intensidad
         )
 
-        # Transición directa al siguiente bloque sin mostrar resumen
+        # Transición directa al siguiente bloque
         respuesta = dialog_manager.obtener_mensaje_anhedonia()
         return respuesta, datos_guardados
+
 
     # --- APARTADO ANHEDONIA ---
     # --- Preguntar sobre anhedonia ---

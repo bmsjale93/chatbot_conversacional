@@ -119,11 +119,10 @@ def obtener_mensaje_intensidad_tristeza() -> dict:
         "estado": "intensidad_tristeza",
         "mensaje": (
             "Por último, ¿cómo describirías la intensidad de esa tristeza cuando aparece?\n\n"
-            "Puedes usar una escala del 1 (muy leve) al 10 (muy intensa), o expresarlo de forma aproximada, como:\n"
-            "'Creo que un 3', 'Más o menos un 7', 'Entre 8 y 9', etc."
+            "Selecciona un número del 1 (muy leve) al 10 (muy intensa)."
         ),
-        "modo_entrada": "mixto",
-        "sugerencias": ["3", "5", "8", "10"]
+        "modo_entrada": "sugerencias",  # Solo selección
+        "sugerencias": [str(i) for i in range(1, 11)]
     }
 
 # -------------------- Síntomas físicos y conductuales --------------------

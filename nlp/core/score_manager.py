@@ -1,7 +1,6 @@
 import redis
 import os
 import json
-import re
 from typing import Optional
 
 # -------------------- Configuración de Redis --------------------
@@ -11,78 +10,27 @@ REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 
 try:
     redis_client = redis.Redis(
-        host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
+        host=REDIS_HOST, port=REDIS_PORT, decode_responses=True
+    )
     redis_client.ping()
 except redis.exceptions.ConnectionError:
     redis_client = None
     print("⚠️ Redis no disponible. Puntuaciones no serán almacenadas.")
 
-# -------------------- Diccionarios de patrones --------------------
-
-DURACION_PATRONES = {
-    10: [
-        "semanas completas", "más de un mes", "varios meses", "durante mucho tiempo",
-        "meses enteros", "desde hace mucho", "por un largo tiempo", "periodos prolongados",
-        "varios meses seguidos"
-    ],
-    9: [
-        "más de tres semanas", "aproximadamente un mes", "casi un mes entero", "alrededor de un mes",
-        "muchísimo tiempo", "más de 21 días", "por mucho tiempo seguido", "dura un mes o más"
-    ],
-    8: [
-        "varias semanas", "tres semanas", "largos periodos", "suele extenderse semanas",
-        "dos o tres semanas", "más de dos semanas", "entre dos y tres semanas"
-    ],
-    7: [
-        "unas tres semanas", "casi un mes", "algo más de dos semanas", "dura bastante",
-        "entre 15 y 20 días", "cerca de veinte días", "alrededor de tres semanas"
-    ],
-    6: [
-        "dos semanas", "más de una semana", "más de diez días", "10 o 12 días", "quince días",
-        "semana y media", "entre una y dos semanas", "una semana larga"
-    ],
-    5: [
-        "una semana", "entre 7 y 10 días", "siete días exactos", "suele durar una semana",
-        "siete u ocho días", "una semana justa"
-    ],
-    4: [
-        "unos días", "algunos días", "un par de días", "durante días", "cuatro o cinco días",
-        "entre tres y cinco días", "dura pocos días", "tres o cuatro días", "unos cuantos días"
-    ],
-    3: [
-        "un día", "unas 24 horas", "todo un día", "dura solo un día", "un día entero",
-        "un día exacto", "solo un día"
-    ],
-    2: [
-        "unas horas", "medio día", "pocas horas", "instantes largos", "varias horas",
-        "una tarde", "una mañana", "unas cuantas horas", "dura pocas horas"
-    ],
-    1: [
-        "minutos", "muy poco tiempo", "momentos", "breve", "instantes",
-        "pasa rápido", "dura muy poco", "solo unos minutos", "algo muy breve"
-    ]
-}
 
 # -------------------- Funciones de cálculo --------------------
 
-def buscar_valor_aproximado(valor_usuario: str, patrones: dict) -> int:
-    valor_usuario = valor_usuario.lower().strip()
-    for puntuacion, expresiones in patrones.items():
-        for expresion in expresiones:
-            if expresion in valor_usuario:
-                return puntuacion
-    return 1  # Por defecto, la mínima puntuación
-
 def calcular_puntuacion(tipo: str, valor: str) -> int:
+    valor = valor.strip()
+
     if tipo == "intensidad":
-        coincidencias = re.findall(r"\b([1-9]|10)\b", valor)
-        if coincidencias:
-            n = int(coincidencias[0])
-            return 9 if n >= 8 else 6 if n >= 4 else 3
-        return 3
+        try:
+            n = int(valor)
+            return n if 1 <= n <= 10 else 1
+        except ValueError:
+            return 1
 
     elif tipo == "frecuencia":
-        # No se limpia, porque se selecciona directamente de sugerencias exactas
         MAPEO_FRECUENCIA = {
             "Todos los días": 10,
             "Casi todos los días": 9,
@@ -95,7 +43,7 @@ def calcular_puntuacion(tipo: str, valor: str) -> int:
             "Casi nunca": 2,
             "Nunca": 1
         }
-        return MAPEO_FRECUENCIA.get(valor.strip(), 1)
+        return MAPEO_FRECUENCIA.get(valor, 1)
 
     elif tipo == "duracion":
         MAPEO_DURACION = {
@@ -110,12 +58,10 @@ def calcular_puntuacion(tipo: str, valor: str) -> int:
             "Varias semanas": 9,
             "Un mes o más": 10
         }
-        return MAPEO_DURACION.get(valor.strip(), 1)
-
-    elif tipo == "duracion":
-        return buscar_valor_aproximado(valor.lower().strip(), DURACION_PATRONES)
+        return MAPEO_DURACION.get(valor, 1)
 
     return 0
+
 
 # -------------------- Gestión de puntuaciones --------------------
 
