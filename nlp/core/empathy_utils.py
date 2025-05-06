@@ -70,17 +70,6 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
             "sugerencias": ["Sí, estoy de acuerdo", "No, prefiero no continuar"]
         }
 
-    if estado_actual == "preguntar_identidad":
-        return {
-            "estado": estado_actual,
-            "mensaje": (
-                "Está bien si no sabes cómo describirte aún, pero si puedes, indícame una etiqueta con la que te identifiques "
-                "(por ejemplo: Masculino, Femenino o No binario). Esto me ayudará a personalizar mejor la conversación."
-            ),
-            "modo_entrada": "texto_libre",
-            "sugerencias": ["Masculino", "Femenino", "No binario"]
-        }
-
     if estado_actual == "preguntar_nombre":
         return {
             "estado": estado_actual,
@@ -90,6 +79,18 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
             ),
             "modo_entrada": "texto_libre",
             "sugerencias": []
+        }
+
+    if estado_actual == "preguntar_identidad":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "Está bien si no sabes cómo describirte aún. Puedes escribirme cualquier etiqueta con la que te identifiques "
+                "o simplemente cómo te gustaría que me refiera a ti.\n\n"
+                "Por ejemplo: 'Masculino', 'Femenino', 'No binario', 'Agénero', 'Fluido', etc."
+            ),
+            "modo_entrada": "texto_libre",
+            "sugerencias": ["Masculino", "Femenino", "No binario"]
         }
 
     if estado_actual == "inicio_exploracion_tristeza":

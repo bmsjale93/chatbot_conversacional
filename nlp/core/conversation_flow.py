@@ -99,10 +99,11 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
     if estado_actual == "preguntar_identidad":
         texto_limpio = texto_usuario.strip().lower()
 
-        if detectar_ambiguedad_identidad(texto_limpio):
+        # Detectar ambigüedad general o ambigüedad específica de identidad
+        if detectar_ambiguedad(texto_limpio) or detectar_ambiguedad_identidad(texto_limpio):
             return generar_respuesta_aclaratoria(estado_actual), datos_guardados
 
-        # Mapear respuestas comunes a etiquetas válidas
+        # Mapeo de respuestas comunes a etiquetas estandarizadas
         MAPEO_IDENTIDAD = {
             "masculino": "masculino",
             "hombre": "masculino",
@@ -113,12 +114,11 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             "no-binario": "no binario"
         }
 
-        identidad = MAPEO_IDENTIDAD.get(texto_limpio)
+        identidad = MAPEO_IDENTIDAD.get(texto_limpio, texto_limpio)  # Usar tal cual si no está mapeada
 
-        if identidad is None:
-            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
-
+        # Guardamos ambas versiones
         datos_guardados["identidad"] = identidad
+        datos_guardados["identidad_original"] = texto_usuario
 
         guardar_interaccion_completa(
             session_id=session_id,
@@ -131,6 +131,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         respuesta = dialog_manager.obtener_mensaje_exploracion_tristeza(nombre)
         respuesta["estado"] = "inicio_exploracion_tristeza"
         return respuesta, datos_guardados
+
 
 
     # ------------ APARTADO TRISTEZA -------------------
