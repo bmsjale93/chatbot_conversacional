@@ -39,6 +39,15 @@ ERROR = "error"
 
 def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, datos_guardados: dict) -> Tuple[dict, dict]:
 
+    # --- Validación global de mensaje vacío ---
+    if not texto_usuario or not texto_usuario.strip():
+        return {
+            "estado": estado_actual,
+            "mensaje": "Por favor, escribe un mensaje antes de continuar.",
+            "modo_entrada": "texto_libre",
+            "sugerencias": []
+        }, datos_guardados
+
     # --- Fase de presentación ---
     if estado_actual == "presentacion":
         respuesta = dialog_manager.obtener_mensaje_presentacion()
@@ -133,31 +142,56 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         return respuesta, datos_guardados
 
 
-
     # ------------ APARTADO TRISTEZA -------------------
     # --- Inicio de exploración emocional (tristeza) ---
     if estado_actual == "inicio_exploracion_tristeza":
         texto_limpio = limpiar_texto(texto_usuario)
 
+        # Detectar ambigüedad general o ambigüedad específica de identidad
         if detectar_ambiguedad(texto_limpio):
             return generar_respuesta_aclaratoria(estado_actual), datos_guardados
 
-        # Analizar emoción y guardar en cache + BD
-        resultado_emocional = analizar_sentimiento(texto_usuario)
-        emocion_detectada = resultado_emocional.get("estado_emocional", "neutral").lower()
+        # Detectar intención (afirmativa, negativa, desconocida)
+        intencion = detectar_intencion(texto_limpio)
 
-        # Guardar interacción con emoción detectada
+        # Si la intención es desconocida, comprobar si la respuesta es ambigua
+        if intencion == "desconocido":
+            if detectar_ambiguedad(texto_limpio):
+                return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        # Detectar emoción SOLO si la intención es afirmativa
+        if intencion == "afirmativo":
+            resultado_emocional = analizar_sentimiento(texto_usuario)
+            emocion_detectada = resultado_emocional.get("estado_emocional", "neutral").lower()
+            confianza_emocion = resultado_emocional.get("confianza", "0%")
+        else:
+            emocion_detectada = "neutral"
+            confianza_emocion = "100%"
+
+        # Asignar puntuación según intención
+        if intencion == "afirmativo":
+            puntuacion = 1
+        elif intencion == "negativo":
+            puntuacion = 0
+        else:
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        # Guardar puntuación y emoción
+        datos_guardados["respuesta_tristeza"] = texto_usuario
+        datos_guardados["emocion_tristeza"] = emocion_detectada
+        datos_guardados["puntuacion_tristeza"] = puntuacion
+
+        asignar_puntuacion(session_id, "tristeza", str(puntuacion))
+
         guardar_interaccion_completa(
             session_id=session_id,
             estado=estado_actual,
             pregunta="¿Has experimentado tristeza recientemente?",
-            respuesta_usuario=texto_usuario
+            respuesta_usuario=texto_usuario,
+            puntuacion=puntuacion
         )
 
-        # Determinar intención (afirmativa, negativa) a través del clasificador de intención
-        intencion = detectar_intencion(texto_limpio)
-
-        # Construir respuesta
+        # --- Construir respuesta según la intención detectada ---
         if intencion == "afirmativo":
             respuesta_base = dialog_manager.obtener_mensaje_frecuencia_tristeza()
             respuesta = {
@@ -168,20 +202,16 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             }
 
         elif intencion == "negativo":
+            respuesta_base = dialog_manager.obtener_mensaje_anhedonia()
             respuesta = {
-                "estado": FIN,
-                "mensaje": (
-                    "¡Me alegra saberlo! Parece que no estás experimentando tristeza en estos momentos. "
-                    "Gracias por tu participación."
-                ),
-                "modo_entrada": "fin",
-                "sugerencias": []
+                "estado": "preguntar_anhedonia",
+                "mensaje": respuesta_base["mensaje"],
+                "modo_entrada": respuesta_base.get("modo_entrada", "texto_libre"),
+                "sugerencias": respuesta_base.get("sugerencias", [])
             }
 
-        else:
-            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
-
         return respuesta, datos_guardados
+
 
     # --- Preguntar frecuencia de tristeza ---
     if estado_actual == "preguntar_frecuencia":

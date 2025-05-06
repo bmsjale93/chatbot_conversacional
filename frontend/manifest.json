@@ -1,0 +1,9 @@
+{
+  "name": "Asistente Emocional",
+  "short_name": "Asistente",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "description": "Asistente Virtual de Evaluación Emocional",
+  "icons": []
+}

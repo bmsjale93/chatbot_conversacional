@@ -24,9 +24,11 @@ def guardar_interaccion(
     texto: str,
     respuesta: str,
     emocion: str,
+    session_id: str,
     guardar_texto_original: bool = False
 ) -> None:
     doc = {
+        "session_id": session_id,
         "mensaje_hash": anonimizar_texto(texto),
         "respuesta_sistema": respuesta,
         "emocion": emocion.lower(),
@@ -86,3 +88,18 @@ def guardar_interaccion_completa(
         conversaciones.insert_one(doc)
     except PyMongoError as e:
         logger.error(f"❌ Error guardando interacción completa: {e}")
+
+def obtener_historial_conversacion(session_id: str) -> list:
+    """
+    Recupera el historial completo para una sesión.
+    """
+    from pymongo import ASCENDING
+    cursor = conversaciones.find({"session_id": session_id}).sort("timestamp", ASCENDING)
+
+    historial = []
+    for doc in cursor:
+        if "pregunta" in doc:
+            historial.append({"role": "assistant", "content": doc["pregunta"]})
+        if "respuesta_usuario" in doc:
+            historial.append({"role": "user", "content": doc["respuesta_usuario"]})
+    return historial

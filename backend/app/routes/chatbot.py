@@ -2,10 +2,10 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from app.models.message import Message
 from app.services.nlp_service import analizar_mensaje
+from app.services.historial_service import recuperar_historial
 import traceback
 
 router = APIRouter()
-
 
 @router.post("/chat")
 async def chat_endpoint(mensaje: Message):
@@ -33,7 +33,6 @@ async def chat_endpoint(mensaje: Message):
         }
 
     except Exception as e:
-        # Mostramos la traza exacta en los logs del backend
         traceback.print_exc()
         return JSONResponse(
             status_code=500,
@@ -42,4 +41,19 @@ async def chat_endpoint(mensaje: Message):
                 "estado": "fin",
                 "sugerencias": []
             }
+        )
+
+@router.get("/chat/historial")
+async def obtener_historial(session_id: str):
+    """
+    Devuelve el historial completo de conversación para una sesión dada.
+    """
+    try:
+        historial = recuperar_historial(session_id)
+        return {"historial": historial}
+    except Exception as e:
+        traceback.print_exc()
+        return JSONResponse(
+            status_code=500,
+            content={"mensaje": f"❌ Error al recuperar historial: {str(e)}"}
         )

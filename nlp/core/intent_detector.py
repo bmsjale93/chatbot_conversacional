@@ -12,7 +12,8 @@ EXPRESIONES_AFIRMATIVAS = [
     "genial", "está bien", "acepto", "continuar", "adelante", "vamos", "venga", "sí quiero", "seguro",
     "me parece bien", "estoy listo", "ok", "sigamos", "sí, vamos a seguir", "continúa", "quiero seguir",
     "sí, por favor", "dale", "acepto continuar", "continuemos", "por mi parte sí", "sin problema",
-    "vale, sigamos", "estoy de acuerdo", "sigamos por favor", "quiero continuar"
+    "vale, sigamos", "estoy de acuerdo", "sigamos por favor", "quiero continuar",
+    "sí, me he sentido triste", "sí, me he sentido muy triste", "sí, últimamente me he sentido triste"
 ]
 
 EXPRESIONES_NEGATIVAS = [
@@ -20,11 +21,12 @@ EXPRESIONES_NEGATIVAS = [
     "nunca", "no estoy seguro", "quizá no", "no quiero seguir", "no, gracias", "ahora no", "negativo",
     "paso", "no quiero continuar", "prefiero parar", "quiero parar", "quiero terminar", "no sigamos",
     "quiero dejarlo", "dejarlo", "detener", "finalizar", "terminar conversación", "basta",
-    "prefiero no seguir", "no deseo continuar", "cancela", "ya no quiero", "deten esto", "me retiro"
+    "prefiero no seguir", "no deseo continuar", "cancela", "ya no quiero", "deten esto", "me retiro", 
+    "no me he sentido bien"
 ]
 
 # ------------------ Utilidades opcionales ------------------
-DEBUG = False
+DEBUG = True
 
 def normalizar_texto(texto: str) -> str:
     texto = unicodedata.normalize("NFD", texto)
@@ -50,7 +52,7 @@ def detectar_intencion(texto_usuario: str) -> Literal["afirmativo", "negativo", 
         return "negativo"
 
     # Paso 2: Similitud semántica
-    emb_usuario = modelo_similitud.encode(texto_usuario, convert_to_tensor=True)
+    emb_usuario = modelo_similitud.encode(texto_normalizado, convert_to_tensor=True)
     emb_afirmativas = modelo_similitud.encode(EXPRESIONES_AFIRMATIVAS, convert_to_tensor=True)
     emb_negativas = modelo_similitud.encode(EXPRESIONES_NEGATIVAS, convert_to_tensor=True)
 
