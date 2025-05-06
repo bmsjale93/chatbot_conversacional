@@ -57,6 +57,19 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
     Genera una respuesta para pedir aclaración al usuario manteniendo el mismo estado,
     adaptando el mensaje según el contexto del estado actual.
     """
+
+    if estado_actual == "consentimiento":
+        return {
+            "estado": "consentimiento",
+            "mensaje": (
+                "No pasa nada si no estás seguro/a. Solo necesito saber si estás de acuerdo en continuar con esta evaluación.\n\n"
+                "Tu información será tratada con confidencialidad y puedes dejarlo cuando quieras. "
+                "¿Deseas seguir con la conversación?"
+            ),
+            "modo_entrada": "texto_libre",
+            "sugerencias": ["Sí, estoy de acuerdo", "No, prefiero no continuar"]
+        }
+
     if estado_actual == "preguntar_identidad":
         return {
             "estado": estado_actual,
