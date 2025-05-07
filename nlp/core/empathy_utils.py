@@ -195,22 +195,40 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
                 "Cuando te pregunto si te cuesta encontrar algo que te motive o ilusione, me refiero a si ves difícil entusiasmarte con cosas por venir, ya sean planes, metas o actividades.\n\n"
                 "¿Te sientes así últimamente?"
             ),
-            "modo_entrada": "texto_libre",
+            "modo_entrada": "mixto",
             "sugerencias": ["Sí, me cuesta ilusionarme", "No, tengo metas", "No estoy seguro"]
         }
 
+    if estado_actual == "preguntar_inutilidad":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "Está bien si no sabes cómo expresarlo aún.\n\n"
+                "A veces, cuando nos sentimos tristes o con la autoestima baja, podemos llegar a pensar que no somos suficientes o que no hacemos nada bien.\n\n"
+                "¿Te ha pasado esto últimamente? Puedes responder, por ejemplo:\n"
+                "'Sí, me he sentido así a veces' o 'No, en realidad no'."
+            ),
+            "modo_entrada": "mixto",
+            "sugerencias": [
+                "Sí, me ha pasado",
+                "No, no me ha pasado",
+                "No estoy seguro"
+            ]
+        }
 
     if estado_actual == "detalle_inutilidad":
         return {
             "estado": estado_actual,
             "mensaje": (
                 "A veces cuesta identificar en qué momentos nos sentimos así.\n\n"
-                "Cuando hablamos de sentir que no somos suficientes, pueden influir situaciones donde nos juzgamos, nos comparamos o sentimos que no cumplimos expectativas.\n\n"
+                "Cuando hablamos de sentir que no somos suficientes, pueden influir situaciones donde nos juzgamos, "
+                "nos comparamos o sentimos que no cumplimos expectativas.\n\n"
                 "¿En qué momentos se te suele pasar ese pensamiento por la cabeza?"
             ),
-            "modo_entrada": "texto_libre",
+            "modo_entrada": "mixto",
             "sugerencias": ["Cuando me equivoco", "Cuando me comparo", "Cuando estoy solo/a"]
         }
+
 
     if estado_actual == "preguntar_ideacion_suicida":
         return {
@@ -263,6 +281,10 @@ def generar_respuesta_empatica(mensaje_base: str, tipo: str = "neutral") -> str:
         "desesperanza": (
             "Sentir que no hay nada que motive o ilusione puede ser muy difícil. Agradezco que lo compartas. "
             "Reconocer esta sensación es un paso importante para buscar claridad y apoyo. "
+        ),
+        "inutilidad": (
+            "A veces podemos ser muy críticos con nosotros mismos, sobre todo en momentos de vulnerabilidad emocional. "
+            "Gracias por compartir esta parte tan personal. Hablar de ello puede ser un paso hacia una mirada más amable hacia ti mismo/a. "
         )
     }
 

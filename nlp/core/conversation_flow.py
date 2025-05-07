@@ -571,43 +571,47 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
 
     # --- Preguntar sentimientos de inutilidad ---
     if estado_actual == "preguntar_inutilidad":
-        texto_limpio = limpiar_texto(texto_usuario)
 
-        if detectar_ambiguedad(texto_limpio):
+        # Detectar ambigüedad en el texto original
+        if detectar_ambiguedad(texto_usuario):
             return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        texto_limpio = limpiar_texto(texto_usuario)
 
         # Detección de intención y emoción
         intencion = detectar_intencion(texto_limpio)
         resultado_emocional = analizar_sentimiento(texto_usuario)
         emocion_detectada = resultado_emocional.get("estado_emocional", "neutral").lower()
+        confianza_emocion = resultado_emocional.get("confianza", "0%")
+
+        # Guardar datos en memoria temporal
+        datos_guardados["emocion_inutilidad"] = emocion_detectada
+        datos_guardados["confianza_emocion_inutilidad"] = confianza_emocion
 
         if intencion == "afirmativo":
             puntuacion = 1
             datos_guardados["inutilidad"] = True
             datos_guardados["puntuacion_inutilidad"] = puntuacion
             asignar_puntuacion(session_id, "inutilidad", str(puntuacion))
-            respuesta_base = dialog_manager.obtener_detalle_inutilidad()
-            respuesta = {
-                "estado": respuesta_base["estado"],
-                "mensaje": respuesta_base["mensaje"],
-                "modo_entrada": respuesta_base.get("modo_entrada", "texto_libre"),
-                "sugerencias": respuesta_base.get("sugerencias", [])
-            }
+
+            mensaje_intro = generar_respuesta_empatica("", tipo="inutilidad")
+            siguiente = dialog_manager.obtener_detalle_inutilidad()
+
         elif intencion == "negativo":
             puntuacion = 0
             datos_guardados["inutilidad"] = False
             datos_guardados["puntuacion_inutilidad"] = puntuacion
             asignar_puntuacion(session_id, "inutilidad", str(puntuacion))
-            respuesta_base = dialog_manager.obtener_mensaje_ideacion_suicida()
-            respuesta = {
-                "estado": respuesta_base["estado"],
-                "mensaje": f"{mensaje_empatico}\n\n{respuesta_base['mensaje']}",
-                "modo_entrada": respuesta_base.get("modo_entrada", "texto_libre"),
-                "sugerencias": respuesta_base.get("sugerencias", [])
-            }
+
+            mensaje_intro = (
+                "Es bueno saber que no has sentido esa carga últimamente. Reconocer esos momentos de estabilidad es muy valioso."
+            )
+            siguiente = dialog_manager.obtener_mensaje_ideacion_suicida()
+
         else:
             return generar_respuesta_aclaratoria(estado_actual), datos_guardados
 
+        # Guardar interacción completa
         guardar_interaccion_completa(
             session_id=session_id,
             estado=estado_actual,
@@ -616,15 +620,23 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             puntuacion=puntuacion
         )
 
-        mensaje_base = "A veces podemos ser muy críticos con nosotros mismos, sobre todo en momentos de vulnerabilidad emocional."
-        mensaje_empatico = generar_respuesta_empatica(mensaje_base, tipo=emocion_detectada)
+        # Preparar respuesta final
+        respuesta = {
+            "estado": siguiente["estado"],
+            "mensaje": f"{mensaje_intro}\n\n{siguiente['mensaje']}",
+            "modo_entrada": siguiente.get("modo_entrada", "mixto"),
+            "sugerencias": siguiente.get("sugerencias", [])
+        }
 
-        respuesta["mensaje"] = f"{mensaje_empatico}\n\n{respuesta['mensaje']}"
         return respuesta, datos_guardados
 
 
     # --- Detalle situaciones de inutilidad ---
     if estado_actual == "detalle_inutilidad":
+        # Detectar ambigüedad
+        if detectar_ambiguedad(texto_usuario):
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
         # Detectar emoción y score
         resultado_emocional = analizar_sentimiento(texto_usuario)
         emocion_detectada = resultado_emocional.get("estado_emocional", "neutral").lower()
