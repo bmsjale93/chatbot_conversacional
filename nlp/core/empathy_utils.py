@@ -29,6 +29,7 @@ PATRONES_AMBIGUOS = [
     re.compile(r"\bno\s+(me\s+)?queda\s+claro\b", re.IGNORECASE),
     re.compile(r"\bes\s+complicado\b", re.IGNORECASE),
     re.compile(r"\bdifícil\s+de\s+decir\b", re.IGNORECASE),
+    re.compile(r"\b(la verdad\s+)?(es que\s+)?no\s+(lo\s+)?sé\b", re.IGNORECASE)
 ]
 
 def detectar_ambiguedad(texto: Optional[str]) -> bool:
@@ -259,57 +260,9 @@ def generar_respuesta_empatica(mensaje_base: str, tipo: str = "neutral") -> str:
             "Qué bonito que lo sientas así. Reconocer las emociones positivas también forma parte del cuidado emocional. "
             "Me alegra poder compartir este momento contigo. "
         ),
-        "amor": (
-            "El amor y el afecto pueden darnos una base muy profunda de apoyo. Me alegra saber que formas parte de ese vínculo. "
-        ),
-        "enojo": (
-            "Sentirse molesto o enfadado es completamente humano. Aquí puedes expresar eso sin miedo a ser juzgado/a. "
-        ),
-        "miedo": (
-            "El miedo puede hacernos sentir vulnerables, pero ponerlo en palabras ya es un paso valiente hacia el cuidado. "
-            "Gracias por confiar en este espacio. "
-        ),
-        "sorpresa": (
-            "A veces lo inesperado nos descoloca, y está bien tomarse un momento para procesarlo. Estoy aquí para ayudarte a darle sentido. "
-        ),
-        "culpa": (
-            "La culpa puede pesar mucho. Hablarla y explorarla con amabilidad puede ayudarte a soltar parte de esa carga. "
-            "Gracias por permitírmelo. "
-        ),
-        "vergüenza": (
-            "Sé que no es fácil compartir lo que nos hace sentir expuestos. Tu apertura es valiosa y muy valiente. "
-            "Gracias por confiar. "
-        ),
-        "frustración": (
-            "La frustración suele aparecer cuando sentimos que algo escapa a nuestro control. Aquí tienes un espacio seguro para explorar eso. "
-        ),
-        "ansiedad": (
-            "La ansiedad puede resultar abrumadora. No estás solo/a en esto, y compartirlo puede ser el primer paso hacia el alivio. "
-        ),
-        "agotamiento": (
-            "Estar emocional o físicamente agotado/a no es señal de debilidad, sino de que has estado haciendo frente a mucho. "
-            "Reconocerlo es parte del autocuidado. "
-        ),
-        "soledad": (
-            "Sentirse solo/a puede ser una experiencia muy profunda. Estoy aquí para acompañarte en ese sentimiento. "
-        ),
-        "esperanza": (
-            "Sentir esperanza, incluso en momentos difíciles, es un recurso interno muy valioso. Me alegra que la mantengas presente. "
-        ),
-        "indiferencia": (
-            "A veces sentimos que nada nos afecta. Esa desconexión también merece ser escuchada con atención y cuidado. "
-        ),
-        "preocupación": (
-            "Siento que hay algo que te tiene inquieto/a. Podemos ir deshilando eso poco a poco, sin prisa. "
-        ),
-        "confusión": (
-            "Estar confundido/a es natural cuando atravesamos cosas intensas. Vamos a tratar de encontrar algo de claridad juntos/as. "
-        ),
-        "neutral": (
-            "Gracias por compartir tu experiencia, sea cual sea. Todo lo que sientas tiene un lugar aquí. "
-        ),
-        "positivo": (
-            "Es bueno saber que te sientes en equilibrio. Celebro ese momento contigo, y me alegra que lo compartas. "
+        "desesperanza": (
+            "Sentir que no hay nada que motive o ilusione puede ser muy difícil. Agradezco que lo compartas. "
+            "Reconocer esta sensación es un paso importante para buscar claridad y apoyo. "
         )
     }
 

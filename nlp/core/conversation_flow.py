@@ -510,10 +510,12 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
 
     # --- Preguntar desesperanza ---
     if estado_actual == "preguntar_desesperanza":
-        texto_limpio = limpiar_texto(texto_usuario)
 
-        if detectar_ambiguedad(texto_limpio):
+        # Evaluar ambigüedad sobre el texto original
+        if detectar_ambiguedad(texto_usuario):
             return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        texto_limpio = limpiar_texto(texto_usuario)
 
         # Detectar intención y emoción
         intencion = detectar_intencion(texto_limpio)
@@ -532,8 +534,12 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         else:
             return generar_respuesta_aclaratoria(estado_actual), datos_guardados
 
+        # Guardar en memoria
         datos_guardados["puntuacion_desesperanza"] = puntuacion
+        datos_guardados["emocion_desesperanza"] = emocion_detectada
+        datos_guardados["confianza_emocion_desesperanza"] = confianza_emocion
 
+        # Guardar en base de datos
         guardar_interaccion_completa(
             session_id=session_id,
             estado=estado_actual,
@@ -542,11 +548,24 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             puntuacion=puntuacion
         )
 
-        mensaje_base = "Gracias por contar esto. A veces sentir que el futuro carece de ilusión puede ser una señal de que necesitamos apoyo."
-        mensaje_empatico = generar_respuesta_empatica(mensaje_base, tipo=emocion_detectada)
+        # Obtener mensaje siguiente
+        siguiente = dialog_manager.obtener_mensaje_inutilidad()
 
-        respuesta = dialog_manager.obtener_mensaje_inutilidad()
-        respuesta["mensaje"] = f"{mensaje_empatico}\n\n{respuesta['mensaje']}"
+        if intencion == "afirmativo":
+            mensaje_intro = generar_respuesta_empatica("", tipo="desesperanza")
+        else:
+            mensaje_intro = (
+                "Me alegra saber que ahora mismo te sientes motivado/a o con metas. "
+                "Es importante reconocer esos momentos de estabilidad emocional."
+            )
+
+        respuesta = {
+            "estado": siguiente["estado"],
+            "mensaje": f"{mensaje_intro}\n\n{siguiente['mensaje']}",
+            "modo_entrada": siguiente.get("modo_entrada", "mixto"),
+            "sugerencias": siguiente.get("sugerencias", [])
+        }
+
         return respuesta, datos_guardados
 
 
