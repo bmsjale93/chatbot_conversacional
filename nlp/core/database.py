@@ -49,12 +49,15 @@ def guardar_interaccion_completa(
     estado: str,
     pregunta: str,
     respuesta_usuario: str,
-    puntuacion: Optional[int] = None
+    puntuacion: Optional[int] = None,
+    emocion: Optional[str] = None,
+    confianza: Optional[str] = None
 ) -> None:
-    resultado_emocional = analizar_sentimiento(respuesta_usuario)
-
-    emocion_detectada = resultado_emocional.get("estado_emocional", "pendiente").lower()
-    confianza_emocion = resultado_emocional.get("confianza", "0%")
+    # Si emoción o confianza no se pasan, se calculan automáticamente
+    if emocion is None or confianza is None:
+        resultado_emocional = analizar_sentimiento(respuesta_usuario)
+        emocion = resultado_emocional.get("estado_emocional", "pendiente").lower()
+        confianza = resultado_emocional.get("confianza", "0%")
 
     # Si no se proporciona puntuación, intentar recuperarla automáticamente
     if puntuacion is None:
@@ -78,8 +81,8 @@ def guardar_interaccion_completa(
         "estado": estado,
         "pregunta": pregunta,
         "respuesta_usuario": respuesta_usuario,
-        "emocion": emocion_detectada,
-        "confianza_emocion": confianza_emocion,
+        "emocion": emocion,
+        "confianza_emocion": confianza,
         "puntuacion": puntuacion,
         "timestamp": datetime.now(timezone.utc)
     }

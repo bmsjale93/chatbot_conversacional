@@ -417,15 +417,16 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
 
             asignar_puntuacion(session_id, "anhedonia", str(puntuacion))
 
-            mensaje_base = dialog_manager.obtener_mensaje_anhedonia_profunda()["mensaje"]
-            mensaje_empatico = generar_respuesta_empatica(mensaje_base, tipo="anhedonia")
+            respuesta_base = dialog_manager.obtener_mensaje_anhedonia_profunda()
+            mensaje_empatico = generar_respuesta_empatica(respuesta_base["mensaje"], tipo="anhedonia")
 
             respuesta = {
                 "estado": "detalle_anhedonia",
                 "mensaje": mensaje_empatico,
-                "modo_entrada": "texto_libre",
-                "sugerencias": []
+                "modo_entrada": respuesta_base.get("modo_entrada", "mixto"),
+                "sugerencias": respuesta_base.get("sugerencias", [])
             }
+
 
         elif intencion == "negativo":
             puntuacion = 0
@@ -446,7 +447,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             respuesta = {
                 "estado": siguiente["estado"],
                 "mensaje": f"{mensaje_empatico}\n\n{siguiente['mensaje']}",
-                "modo_entrada": siguiente.get("modo_entrada", "texto_libre"),
+                "modo_entrada": siguiente.get("modo_entrada", "mixto"),
                 "sugerencias": siguiente.get("sugerencias", [])
             }
 
@@ -464,40 +465,44 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         return respuesta, datos_guardados
 
 
-
     # --- Detalle actividades con anhedonia ---
     if estado_actual == "detalle_anhedonia":
         resultado_emocional = analizar_sentimiento(texto_usuario)
         emocion_detectada = resultado_emocional.get("estado_emocional", "neutral").lower()
         confianza_emocion = resultado_emocional.get("confianza", "0%")
 
-        # Mensaje empático más profesional
+        # Mensaje fijo profesional, sin modificación por emoción
         mensaje_base = (
             "Gracias por compartirlo. A veces, perder interés por lo que antes disfrutábamos puede ser confuso, "
             "desconcertante o incluso doloroso. Reconocerlo ya es un paso importante para comprender cómo te sientes."
         )
-        mensaje_empatico = generar_respuesta_empatica(mensaje_base, tipo=emocion_detectada)
 
-        # Guardamos todo
+        respuesta_base = dialog_manager.obtener_mensaje_desesperanza()
+        mensaje_completo = f"{mensaje_base}\n\n{respuesta_base['mensaje']}"
+
+        # Guardar interacción incluyendo la emoción detectada
         guardar_interaccion_completa(
             session_id=session_id,
             estado=estado_actual,
             pregunta="¿Qué actividades has dejado de disfrutar?",
-            respuesta_usuario=texto_usuario
+            respuesta_usuario=texto_usuario,
+            emocion=emocion_detectada,
+            confianza=confianza_emocion
         )
 
+        # Guardar en memoria temporal
         datos_guardados["actividades_sin_disfrute"] = texto_usuario
+        datos_guardados["emocion_ultima_respuesta"] = emocion_detectada
+        datos_guardados["confianza_emocion"] = confianza_emocion
 
-        respuesta_base = dialog_manager.obtener_mensaje_desesperanza()
         respuesta = {
-            "estado": respuesta_base["estado"],
-            "mensaje": f"{mensaje_empatico}\n\n{respuesta_base['mensaje']}",
-            "modo_entrada": respuesta_base.get("modo_entrada", "texto_libre"),
+            "estado": "preguntar_desesperanza",
+            "mensaje": mensaje_completo,
+            "modo_entrada": respuesta_base.get("modo_entrada", "mixto"),
             "sugerencias": respuesta_base.get("sugerencias", [])
         }
 
         return respuesta, datos_guardados
-
 
     # --- Preguntar desesperanza ---
     if estado_actual == "preguntar_desesperanza":
