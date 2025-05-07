@@ -96,29 +96,39 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
 
     # --- Consentimiento ---
     if estado_actual == "consentimiento":
-        texto_limpio = limpiar_texto(texto_usuario).lower()
-
         # 1. Detectar ambigüedad explícita
         if detectar_ambiguedad(texto_usuario):
             return generar_respuesta_aclaratoria("consentimiento"), datos_guardados
 
-        # 2. Reglas manuales para rechazo explícito
+        # 2. Rechazo explícito por coincidencia directa
         respuestas_negativas_explicitamente = [
             "no", "no quiero continuar", "no, prefiero no continuar",
             "prefiero no continuar", "no deseo continuar"
         ]
-        if texto_limpio in respuestas_negativas_explicitamente:
+        if texto_usuario.strip().lower() in respuestas_negativas_explicitamente:
             respuesta = dialog_manager.obtener_mensaje_consentimiento_rechazado()
             return respuesta, datos_guardados
 
-        # 3. Clasificador de intención
+        # 3. Clasificador de intención (afirmativo, negativo, desconocido)
         intencion = detectar_intencion(texto_usuario)
 
         if intencion == "afirmativo":
+            # Guardar consentimiento explícito
+            datos_guardados["consentimiento_aceptado"] = True
+
+            guardar_interaccion_completa(
+                session_id=session_id,
+                estado=estado_actual,
+                pregunta="¿Estás de acuerdo en continuar con esta evaluación emocional?",
+                respuesta_usuario=texto_usuario
+            )
+
             respuesta = dialog_manager.obtener_mensaje_nombre()
             respuesta["estado"] = "preguntar_nombre"
+
         elif intencion == "negativo":
             respuesta = dialog_manager.obtener_mensaje_consentimiento_rechazado()
+
         else:
             respuesta = dialog_manager.obtener_mensaje_presentacion()
             respuesta["estado"] = "consentimiento"
