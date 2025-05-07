@@ -467,6 +467,9 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
 
     # --- Detalle actividades con anhedonia ---
     if estado_actual == "detalle_anhedonia":
+        if detectar_ambiguedad(texto_usuario):
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
         resultado_emocional = analizar_sentimiento(texto_usuario)
         emocion_detectada = resultado_emocional.get("estado_emocional", "neutral").lower()
         confianza_emocion = resultado_emocional.get("confianza", "0%")
@@ -503,6 +506,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         }
 
         return respuesta, datos_guardados
+
 
     # --- Preguntar desesperanza ---
     if estado_actual == "preguntar_desesperanza":

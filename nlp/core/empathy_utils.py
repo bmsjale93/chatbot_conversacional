@@ -172,6 +172,19 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
                 "No lo sé"
             ]
         }
+    
+    if estado_actual == "detalle_anhedonia":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "Está bien si no sabes identificarlo con claridad aún.\n\n"
+                "A veces dejamos de disfrutar ciertas cosas sin darnos cuenta. Me refiero a actividades como salir con amigos, escuchar música, hacer ejercicio, ver películas, etc.\n\n"
+                "¿Hay alguna de esas cosas que sientas que ya no disfrutas como antes?"
+            ),
+            "modo_entrada": "mixto",
+            "sugerencias": ["Salir con amigos", "Escuchar música", "Hacer deporte"]
+        }
+
 
     if estado_actual == "preguntar_desesperanza":
         return {
@@ -185,18 +198,6 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
             "sugerencias": ["Sí, me cuesta ilusionarme", "No, tengo metas", "No estoy seguro"]
         }
 
-    if estado_actual == "preguntar_inutilidad":
-        return {
-            "estado": estado_actual,
-            "mensaje": (
-                "Está bien si no sabes cómo expresarlo aún.\n\n"
-                "A veces, cuando nos sentimos tristes o con la autoestima baja, podemos llegar a pensar que no somos suficientes o que no hacemos nada bien.\n\n"
-                "¿Te ha pasado esto últimamente? Puedes responder, por ejemplo:\n"
-                "'Sí, me he sentido así a veces' o 'No, en realidad no'."
-            ),
-            "modo_entrada": "texto_libre",
-            "sugerencias": ["Sí, me ha pasado", "No, no me ha pasado", "No estoy seguro"]
-        }
 
     if estado_actual == "detalle_inutilidad":
         return {
