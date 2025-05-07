@@ -241,8 +241,9 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
                 "- 'He pensado en hacerme daño'\n\n"
                 "¿Has tenido pensamientos como estos en los últimos días?"
             ),
-            "modo_entrada": "texto_libre",
+            "modo_entrada": "sugerencias",
             "sugerencias": [
+                "No entiendo la pregunta",
                 "No, en ningún momento",
                 "Sí, pero sin intención de hacerme daño",
                 "Sí, pensé en hacerme daño, pero no tengo intención",
@@ -259,6 +260,9 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
         "modo_entrada": "texto_libre",
         "sugerencias": []
     }
+
+
+
 # -------------------- Mensajes empáticos --------------------
 
 def generar_respuesta_empatica(mensaje_base: str, tipo: str = "neutral") -> str:

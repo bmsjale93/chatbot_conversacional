@@ -18,7 +18,6 @@ from core.empathy_utils import (
 from core.database import guardar_interaccion_completa
 from core.cleaner import limpiar_texto
 from utils.extract_name import extraer_nombre
-from utils.respuestas_ideacion_suicidio import respuestas_ideacion_suicidio
 import re
 
 def detectar_emocion(texto_usuario: str) -> str:
@@ -53,6 +52,7 @@ ESTADOS_DIALOG_MANAGER = {
     "preguntar_inutilidad": dialog_manager.obtener_mensaje_inutilidad,
     "detalle_inutilidad": dialog_manager.obtener_detalle_inutilidad,
     "preguntar_ideacion_suicida": dialog_manager.obtener_mensaje_ideacion_suicida,
+    "cerrar_evaluación_por_riesgo_alto": dialog_manager.obtener_cierre_alto_riesgo,
     "esperar_siguiente_pregunta": dialog_manager.obtener_mensaje_esperar_siguiente_pregunta,
 }
 
@@ -569,22 +569,17 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         return respuesta, datos_guardados
 
 
-    # --- Preguntar sentimientos de inutilidad ---
     if estado_actual == "preguntar_inutilidad":
+        texto_limpio = limpiar_texto(texto_usuario)
 
-        # Detectar ambigüedad en el texto original
         if detectar_ambiguedad(texto_usuario):
             return generar_respuesta_aclaratoria(estado_actual), datos_guardados
 
-        texto_limpio = limpiar_texto(texto_usuario)
-
-        # Detección de intención y emoción
         intencion = detectar_intencion(texto_limpio)
         resultado_emocional = analizar_sentimiento(texto_usuario)
         emocion_detectada = resultado_emocional.get("estado_emocional", "neutral").lower()
         confianza_emocion = resultado_emocional.get("confianza", "0%")
 
-        # Guardar datos en memoria temporal
         datos_guardados["emocion_inutilidad"] = emocion_detectada
         datos_guardados["confianza_emocion_inutilidad"] = confianza_emocion
 
@@ -593,7 +588,6 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             datos_guardados["inutilidad"] = True
             datos_guardados["puntuacion_inutilidad"] = puntuacion
             asignar_puntuacion(session_id, "inutilidad", str(puntuacion))
-
             mensaje_intro = generar_respuesta_empatica("", tipo="inutilidad")
             siguiente = dialog_manager.obtener_detalle_inutilidad()
 
@@ -602,25 +596,23 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             datos_guardados["inutilidad"] = False
             datos_guardados["puntuacion_inutilidad"] = puntuacion
             asignar_puntuacion(session_id, "inutilidad", str(puntuacion))
-
             mensaje_intro = (
-                "Es bueno saber que no has sentido esa carga últimamente. Reconocer esos momentos de estabilidad es muy valioso."
+                "Es bueno saber que no has sentido esa carga últimamente. "
+                "Reconocer esos momentos de estabilidad es muy valioso."
             )
             siguiente = dialog_manager.obtener_mensaje_ideacion_suicida()
 
         else:
             return generar_respuesta_aclaratoria(estado_actual), datos_guardados
 
-        # Guardar interacción completa
         guardar_interaccion_completa(
             session_id=session_id,
             estado=estado_actual,
             pregunta="¿En los últimos días has sentido que no eres suficiente?",
             respuesta_usuario=texto_usuario,
-            puntuacion=puntuacion
+            puntuacion=puntuacion  # Ya garantizado que existe
         )
 
-        # Preparar respuesta final
         respuesta = {
             "estado": siguiente["estado"],
             "mensaje": f"{mensaje_intro}\n\n{siguiente['mensaje']}",
@@ -670,73 +662,70 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
 
     # --- Preguntar ideación suicida ---
     if estado_actual == "preguntar_ideacion_suicida":
-        texto_limpio = limpiar_texto(texto_usuario)
-        texto_bajo = texto_limpio.lower()
+        # Mapa exacto de respuestas válidas
+        mapa_respuestas = {
+            "No, en ningún momento": 0,
+            "Sí, pero sin intención de hacerme daño": 1,
+            "Sí, pensé en hacerme daño, pero no tengo intención": 2,
+            "Sí, pensé en hacerme daño y tengo un plan": 3,
+            "No entiendo la pregunta": None  # Se usa para activar aclaración
+        }
 
-        if detectar_ambiguedad(texto_limpio):
-            return generar_respuesta_aclaratoria_ideacion(estado_actual), datos_guardados
+        if texto_usuario not in mapa_respuestas:
+            return {
+                "estado": estado_actual,
+                "mensaje": (
+                    "Parece que tu respuesta no coincide con las opciones disponibles.\n\n"
+                    "Por favor, selecciona una de las respuestas propuestas para continuar."
+                ),
+                "modo_entrada": "sugerencias",
+                "sugerencias": list(mapa_respuestas.keys())
+            }, datos_guardados
 
-        # Detectar emoción y confianza
+        if texto_usuario == "No entiendo la pregunta":
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        # Obtener puntuación directamente
+        puntuacion = mapa_respuestas[texto_usuario]
+
+        # Analizar emoción de la respuesta seleccionada (aunque sea fija)
         resultado_emocional = analizar_sentimiento(texto_usuario)
         emocion_detectada = resultado_emocional.get("estado_emocional", "neutral").lower()
         confianza_emocion = resultado_emocional.get("confianza", "0%")
 
-        puntuacion = None
-        mensaje = None
-
-        for frase in respuestas_ideacion_suicidio["puntuacion_3"]:
-            if frase in texto_bajo:
-                puntuacion = 3
-                mensaje = (
-                    "Gracias por compartirlo. Lamento mucho que sea así, imagino que estás pasando por una situación difícil.\n\n"
-                    "Lo más adecuado es que contactes ahora mismo con profesionales humanos. Por favor, ponte en contacto con las personas que pueden ayudarte:\n\n"
-                    "- 📞 024 (Atención al suicidio - Cruz Roja)\n"
-                    "- 📞 717 00 37 17 (Teléfono de la esperanza)\n"
-                    "- 📞 112 (Emergencias)"
-                )
-                break
-
-        if puntuacion is None:
-            for frase in respuestas_ideacion_suicidio["puntuacion_2"]:
-                if frase in texto_bajo:
-                    puntuacion = 2
-                    mensaje = (
-                        "Gracias por tu sinceridad. Entiendo que compartir esto no es fácil.\n\n"
-                        "Si en algún momento estos pensamientos se vuelven más intensos o difíciles de manejar, por favor considera hablar con un profesional de salud mental.\n"
-                        "Tu bienestar es muy importante. Seguimos adelante cuando estés preparado/a, sin presión."
-                    )
-                    break
-
-        if puntuacion is None:
-            for frase in respuestas_ideacion_suicidio["puntuacion_1"]:
-                if frase in texto_bajo:
-                    puntuacion = 1
-                    mensaje = (
-                        "Gracias por compartir algo tan delicado. No estás solo/a en sentirte así en ciertos momentos.\n\n"
-                        "Reconocer estos pensamientos, incluso sin intención, ya es un paso importante para cuidar tu salud emocional.\n"
-                        "Seguimos cuando estés listo/a, estoy aquí para acompañarte en este proceso."
-                    )
-                    break
-
-        if puntuacion is None:
-            for frase in respuestas_ideacion_suicidio["puntuacion_0"]:
-                if frase in texto_bajo:
-                    puntuacion = 0
-                    mensaje = (
-                        "Gracias por tu respuesta. Me alegra saber que no has tenido pensamientos de ese tipo últimamente.\n\n"
-                        "Es importante reconocer estos momentos en los que nos sentimos emocionalmente estables. "
-                        "Vamos a continuar cuando te sientas preparado/a."
-                    )
-                    break
-
-        if puntuacion is None:
-            return generar_respuesta_aclaratoria_ideacion(estado_actual), datos_guardados
+        # Mensaje personalizado según la puntuación
+        if puntuacion == 0:
+            mensaje = (
+                "Gracias por tu respuesta. Me alegra saber que no has tenido pensamientos de ese tipo últimamente.\n\n"
+                "Es importante reconocer estos momentos en los que nos sentimos emocionalmente estables. "
+                "Vamos a continuar cuando te sientas preparado/a."
+            )
+        elif puntuacion == 1:
+            mensaje = (
+                "Gracias por compartir algo tan delicado. No estás solo/a en sentirte así en ciertos momentos.\n\n"
+                "Reconocer estos pensamientos, incluso sin intención, ya es un paso importante para cuidar tu salud emocional.\n"
+                "Seguimos cuando estés listo/a, estoy aquí para acompañarte en este proceso."
+            )
+        elif puntuacion == 2:
+            mensaje = (
+                "Gracias por tu sinceridad. Entiendo que compartir esto no es fácil.\n\n"
+                "Si en algún momento estos pensamientos se vuelven más intensos o difíciles de manejar, por favor considera hablar con un profesional de salud mental.\n"
+                "Tu bienestar es muy importante. Seguimos adelante cuando estés preparado/a, sin presión."
+            )
+        elif puntuacion == 3:
+            mensaje = (
+                "Gracias por compartirlo. Lamento mucho que sea así, imagino que estás pasando por una situación difícil.\n\n"
+                "Lo más adecuado es que contactes ahora mismo con profesionales humanos. Por favor, ponte en contacto con las personas que pueden ayudarte:\n\n"
+                "- 📞 024 (Atención al suicidio - Cruz Roja)\n"
+                "- 📞 717 00 37 17 (Teléfono de la esperanza)\n"
+                "- 📞 112 (Emergencias)"
+            )
 
         # Guardar datos
         datos_guardados["puntuacion_ideacion_suicida"] = puntuacion
         datos_guardados["ideacion_suicida_texto"] = texto_usuario
-        datos_guardados["emocion_ultima_respuesta"] = emocion_detectada
-        datos_guardados["confianza_emocion"] = confianza_emocion
+        datos_guardados["emocion_ideacion_suicida"] = emocion_detectada
+        datos_guardados["confianza_emocion_ideacion"] = confianza_emocion
 
         guardar_interaccion_completa(
             session_id=session_id,
@@ -746,9 +735,18 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             puntuacion=puntuacion
         )
 
-        respuesta = dialog_manager.obtener_mensaje_esperar_siguiente_pregunta()
-        respuesta["mensaje"] = mensaje
-        return respuesta, datos_guardados
+        if puntuacion == 3:
+            mensaje_cierre = dialog_manager.obtener_cierre_alto_riesgo()
+            return mensaje_cierre, datos_guardados
+        else:
+            siguiente = dialog_manager.obtener_mensaje_esperar_siguiente_pregunta()
+            return {
+                "estado": siguiente["estado"],
+                "mensaje": mensaje,
+                "modo_entrada": "sugerencias",
+                "sugerencias": siguiente.get("sugerencias", [])
+            }, datos_guardados
+
 
 
 

@@ -201,14 +201,32 @@ def obtener_mensaje_ideacion_suicida() -> dict:
             "Por ejemplo, algunas personas piensan que sería mejor no estar aquí, que la vida no merece la pena, o incluso piensan en hacerse daño.\n\n"
             "Puedes responder con sinceridad. Estoy aquí para escucharte sin juzgar."
         ),
-        "modo_entrada": "mixto",
+        "modo_entrada": "sugerencias",
         "sugerencias": [
+            "No entiendo la pregunta",
             "No, en ningún momento",
             "Sí, pero sin intención de hacerme daño",
             "Sí, pensé en hacerme daño, pero no tengo intención",
             "Sí, pensé en hacerme daño y tengo un plan"
         ]
     }
+
+def obtener_cierre_alto_riesgo() -> dict:
+    return {
+        "estado": "cerrar_evaluación_por_riesgo_alto",
+        "mensaje": (
+            "Gracias por compartir algo tan importante. Lo que estás viviendo merece toda la atención y el cuidado profesional posible.\n\n"
+            "Por favor, contacta de inmediato con alguno de estos recursos:\n"
+            "- 📞 024 (Atención al suicidio - Cruz Roja)\n"
+            "- 📞 717 00 37 17 (Teléfono de la esperanza)\n"
+            "- 📞 112 (Emergencias)\n\n"
+            "Este asistente no puede ofrecer la ayuda humana que necesitas ahora. No estás solo/a. Hay personas preparadas para ayudarte.\n\n"
+            "Aquí termina nuestra conversación por ahora. Cuídate mucho."
+        ),
+        "modo_entrada": "sugerencias",
+        "sugerencias": []
+    }
+
 
 def obtener_mensaje_esperar_siguiente_pregunta() -> dict:
     return {
