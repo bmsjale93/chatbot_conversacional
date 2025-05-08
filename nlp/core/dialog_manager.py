@@ -227,6 +227,21 @@ def obtener_cierre_alto_riesgo() -> dict:
         "sugerencias": []
     }
 
+def obtener_mensaje_fatiga() -> dict:
+    return {
+        "estado": "preguntar_fatiga",
+        "mensaje": (
+            "¿Has notado últimamente que te falta energía o te cansas con más facilidad de lo habitual?\n\n"
+            "Puedes responder con sinceridad. Estoy aquí para escucharte sin juzgar."
+        ),
+        "modo_entrada": "mixto",
+        "sugerencias": [
+            "Sí, me siento más cansado/a",
+            "No, tengo la misma energía de siempre",
+            "No estoy seguro"
+        ]
+    }
+
 
 def obtener_mensaje_esperar_siguiente_pregunta() -> dict:
     return {

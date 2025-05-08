@@ -251,6 +251,27 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
             ]
         }
 
+    if estado_actual == "preguntar_fatiga":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "A veces no es fácil notar cambios en nuestra energía hasta que nos detenemos a pensarlo.\n\n"
+                "Me refiero a si últimamente te has sentido con menos energía de lo habitual, como si te costara más hacer las cosas, "
+                "o te cansaras más rápido de lo normal, incluso con tareas cotidianas.\n\n"
+                "¿Dirías que has notado algo así en los últimos días?"
+            ),
+            "modo_entrada": "mixto",
+            "sugerencias": [
+                "Sí, me siento más cansado/a",
+                "No, tengo la misma energía de siempre",
+                "No estoy seguro"
+            ]
+        }
+
+
+
+
+
     return {
         "estado": estado_actual,
         "mensaje": (

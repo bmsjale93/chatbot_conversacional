@@ -52,6 +52,7 @@ ESTADOS_DIALOG_MANAGER = {
     "preguntar_inutilidad": dialog_manager.obtener_mensaje_inutilidad,
     "detalle_inutilidad": dialog_manager.obtener_detalle_inutilidad,
     "preguntar_ideacion_suicida": dialog_manager.obtener_mensaje_ideacion_suicida,
+    "preguntar_fatiga": dialog_manager.obtener_mensaje_fatiga,
     "cerrar_evaluación_por_riesgo_alto": dialog_manager.obtener_cierre_alto_riesgo,
     "esperar_siguiente_pregunta": dialog_manager.obtener_mensaje_esperar_siguiente_pregunta,
 }
@@ -633,43 +634,6 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         return respuesta, datos_guardados
 
 
-    # --- Detalle situaciones de inutilidad ---
-    if estado_actual == "detalle_inutilidad":
-        # Detectar ambigüedad
-        if detectar_ambiguedad(texto_usuario):
-            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
-
-        # Detectar emoción y score
-        resultado_emocional = analizar_sentimiento(texto_usuario)
-        emocion_detectada = resultado_emocional.get("estado_emocional", "neutral").lower()
-        confianza_emocion = resultado_emocional.get("confianza", "0%")
-
-        # Generar mensaje empático en base a la emoción
-        mensaje_base = (
-            "Gracias por abrirte y contarme en qué momentos te sientes así. "
-            "Es importante reconocer esas situaciones para poder abordarlas."
-        )
-        mensaje_empatico = generar_respuesta_empatica(mensaje_base, tipo=emocion_detectada)
-
-        # Guardar interacción completa incluyendo emoción detectada
-        guardar_interaccion_completa(
-            session_id=session_id,
-            estado=estado_actual,
-            pregunta="¿En qué situaciones sientes que no eres suficiente?",
-            respuesta_usuario=texto_usuario,
-            puntuacion=None  # No se asigna puntuación explícita aquí
-        )
-
-        datos_guardados["situaciones_inutilidad"] = texto_usuario
-        datos_guardados["emocion_ultima_respuesta"] = emocion_detectada
-        datos_guardados["confianza_emocion"] = confianza_emocion
-
-        # Preparar respuesta
-        respuesta = dialog_manager.obtener_mensaje_ideacion_suicida()
-        respuesta["mensaje"] = f"{mensaje_empatico}\n\n{respuesta['mensaje']}"
-        return respuesta, datos_guardados
-
-
     # --- Preguntar ideación suicida ---
     if estado_actual == "preguntar_ideacion_suicida":
         # Mapa exacto de respuestas válidas
@@ -698,38 +662,38 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         # Obtener puntuación directamente
         puntuacion = mapa_respuestas[texto_usuario]
 
-        # Analizar emoción de la respuesta seleccionada (aunque sea fija)
+        # Analizar emoción
         resultado_emocional = analizar_sentimiento(texto_usuario)
         emocion_detectada = resultado_emocional.get("estado_emocional", "neutral").lower()
         confianza_emocion = resultado_emocional.get("confianza", "0%")
 
-        # Mensaje personalizado según la puntuación
+        # Mensaje según puntuación
         if puntuacion == 0:
-            mensaje = (
+            mensaje_ideacion = (
                 "Gracias por tu respuesta. Me alegra saber que no has tenido pensamientos de ese tipo últimamente.\n\n"
-                "Es importante reconocer estos momentos en los que nos sentimos emocionalmente estables. "
-                "Vamos a continuar cuando te sientas preparado/a."
+                "Es importante reconocer estos momentos en los que nos sentimos emocionalmente estables."
             )
         elif puntuacion == 1:
-            mensaje = (
+            mensaje_ideacion = (
                 "Gracias por compartir algo tan delicado. No estás solo/a en sentirte así en ciertos momentos.\n\n"
-                "Reconocer estos pensamientos, incluso sin intención, ya es un paso importante para cuidar tu salud emocional.\n"
-                "Seguimos cuando estés listo/a, estoy aquí para acompañarte en este proceso."
+                "Reconocer estos pensamientos, incluso sin intención, ya es un paso importante para cuidar tu salud emocional."
             )
         elif puntuacion == 2:
-            mensaje = (
+            mensaje_ideacion = (
                 "Gracias por tu sinceridad. Entiendo que compartir esto no es fácil.\n\n"
                 "Si en algún momento estos pensamientos se vuelven más intensos o difíciles de manejar, por favor considera hablar con un profesional de salud mental.\n"
-                "Tu bienestar es muy importante. Seguimos adelante cuando estés preparado/a, sin presión."
+                "Tu bienestar es muy importante. Seguimos adelante sin presión."
             )
         elif puntuacion == 3:
-            mensaje = (
+            mensaje_ideacion = (
                 "Gracias por compartirlo. Lamento mucho que sea así, imagino que estás pasando por una situación difícil.\n\n"
                 "Lo más adecuado es que contactes ahora mismo con profesionales humanos. Por favor, ponte en contacto con las personas que pueden ayudarte:\n\n"
                 "- 📞 024 (Atención al suicidio - Cruz Roja)\n"
                 "- 📞 717 00 37 17 (Teléfono de la esperanza)\n"
                 "- 📞 112 (Emergencias)"
             )
+            mensaje_cierre = dialog_manager.obtener_cierre_alto_riesgo()
+            return mensaje_cierre, datos_guardados
 
         # Guardar datos
         datos_guardados["puntuacion_ideacion_suicida"] = puntuacion
@@ -745,19 +709,65 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             puntuacion=puntuacion
         )
 
-        if puntuacion == 3:
-            mensaje_cierre = dialog_manager.obtener_cierre_alto_riesgo()
-            return mensaje_cierre, datos_guardados
+        # Pasar automáticamente a la siguiente pregunta (fatiga)
+        siguiente = dialog_manager.obtener_mensaje_fatiga()
+        return {
+            "estado": siguiente["estado"],
+            "mensaje": f"{mensaje_ideacion}\n\n{''.join(siguiente['mensaje'])}",
+            "modo_entrada": siguiente["modo_entrada"],
+            "sugerencias": siguiente.get("sugerencias", [])
+        }, datos_guardados
+
+
+    # --- Preguntar fatiga ---
+    if estado_actual == "preguntar_fatiga":
+        if detectar_ambiguedad(texto_usuario):
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        # Detectar intención (sí = 1 punto, no = 0 puntos)
+        intencion = detectar_intencion(texto_usuario)
+
+        if intencion == "afirmativo":
+            puntuacion = 1
+            mensaje = (
+                "Gracias por contármelo. Sentirse con menos energía es algo que muchas personas experimentan en momentos difíciles.\n\n"
+                "Vamos a seguir cuando te sientas preparado/a."
+            )
+        elif intencion == "negativo":
+            puntuacion = 0
+            mensaje = (
+                "Entiendo, es una buena señal que mantengas tu nivel de energía habitual.\n\n"
+                "Vamos a continuar con la siguiente pregunta cuando estés listo/a."
+            )
         else:
-            siguiente = dialog_manager.obtener_mensaje_esperar_siguiente_pregunta()
-            return {
-                "estado": siguiente["estado"],
-                "mensaje": mensaje,
-                "modo_entrada": "sugerencias",
-                "sugerencias": siguiente.get("sugerencias", [])
-            }, datos_guardados
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
 
+        # Analizar emoción
+        resultado_emocional = analizar_sentimiento(texto_usuario)
+        emocion = resultado_emocional.get("estado_emocional", "neutral").lower()
+        confianza = resultado_emocional.get("confianza", "0%")
 
+        # Guardar datos
+        datos_guardados["puntuacion_fatiga"] = puntuacion
+        datos_guardados["fatiga_texto"] = texto_usuario
+        datos_guardados["emocion_fatiga"] = emocion
+        datos_guardados["confianza_emocion_fatiga"] = confianza
+
+        guardar_interaccion_completa(
+            session_id=session_id,
+            estado=estado_actual,
+            pregunta="¿Has notado últimamente que te falta energía o te cansas con más facilidad de lo habitual?",
+            respuesta_usuario=texto_usuario,
+            puntuacion=puntuacion
+        )
+
+        siguiente = dialog_manager.obtener_mensaje_esperar_siguiente_pregunta()
+        return {
+            "estado": siguiente["estado"],
+            "mensaje": mensaje,
+            "modo_entrada": "sugerencias",
+            "sugerencias": siguiente.get("sugerencias", [])
+        }, datos_guardados
 
 
 
