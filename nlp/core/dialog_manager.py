@@ -242,6 +242,40 @@ def obtener_mensaje_fatiga() -> dict:
         ]
     }
 
+def obtener_mensaje_sueno() -> dict:
+    return {
+        "estado": "preguntar_sueno",
+        "mensaje": (
+            "¿Has notado últimamente cambios o dificultades con tu sueño?\n\n"
+            "Puedes responder con sinceridad, y si no estás seguro/a también puedes decírmelo."
+        ),
+        "modo_entrada": "mixto",
+        "sugerencias": [
+            "Sí, he notado cambios",
+            "No, duermo bien",
+            "No estoy seguro"
+        ]
+    }
+
+def obtener_detalle_sueno() -> dict:
+    return {
+        "estado": "detalle_sueno",
+        "mensaje": (
+            "Gracias por compartirlo. ¿Podrías contarme qué tipo de dificultades estás teniendo con el sueño?\n\n"
+            "Por ejemplo:\n"
+            "- Te cuesta dormirte\n"
+            "- Te despiertas varias veces durante la noche\n"
+            "- Estás durmiendo más o menos horas de lo habitual"
+        ),
+        "modo_entrada": "mixto",
+        "sugerencias": [
+            "Me cuesta dormirme",
+            "Me despierto mucho",
+            "Duermo menos horas",
+            "Duermo más de lo habitual"
+        ]
+    }
+
 
 def obtener_mensaje_esperar_siguiente_pregunta() -> dict:
     return {

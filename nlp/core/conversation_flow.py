@@ -54,6 +54,11 @@ ESTADOS_DIALOG_MANAGER = {
     "preguntar_ideacion_suicida": dialog_manager.obtener_mensaje_ideacion_suicida,
     "preguntar_fatiga": dialog_manager.obtener_mensaje_fatiga,
     "cerrar_evaluación_por_riesgo_alto": dialog_manager.obtener_cierre_alto_riesgo,
+    "preguntar_sueno": dialog_manager.obtener_mensaje_sueno,
+    "detalle_sueno": dialog_manager.obtener_detalle_sueno,
+
+
+
     "esperar_siguiente_pregunta": dialog_manager.obtener_mensaje_esperar_siguiente_pregunta,
 }
 
@@ -724,20 +729,18 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         if detectar_ambiguedad(texto_usuario):
             return generar_respuesta_aclaratoria(estado_actual), datos_guardados
 
-        # Detectar intención (sí = 1 punto, no = 0 puntos)
+        # Detectar intención
         intencion = detectar_intencion(texto_usuario)
 
         if intencion == "afirmativo":
             puntuacion = 1
-            mensaje = (
-                "Gracias por contármelo. Sentirse con menos energía es algo que muchas personas experimentan en momentos difíciles.\n\n"
-                "Vamos a seguir cuando te sientas preparado/a."
+            mensaje_empatico = (
+                "Gracias por contármelo. Sentirse con menos energía es algo que muchas personas experimentan en momentos difíciles."
             )
         elif intencion == "negativo":
             puntuacion = 0
-            mensaje = (
-                "Entiendo, es una buena señal que mantengas tu nivel de energía habitual.\n\n"
-                "Vamos a continuar con la siguiente pregunta cuando estés listo/a."
+            mensaje_empatico = (
+                "Entiendo, es una buena señal que mantengas tu nivel de energía habitual."
             )
         else:
             return generar_respuesta_aclaratoria(estado_actual), datos_guardados
@@ -761,13 +764,170 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             puntuacion=puntuacion
         )
 
+        # Avanzar directamente a la siguiente pregunta: sueño
+        siguiente = dialog_manager.obtener_mensaje_sueno()
+        return {
+            "estado": siguiente["estado"],
+            "mensaje": f"{mensaje_empatico}\n\n{''.join(siguiente['mensaje'])}",
+            "modo_entrada": siguiente["modo_entrada"],
+            "sugerencias": siguiente.get("sugerencias", [])
+        }, datos_guardados
+
+
+    # --- Preguntar sueño ---
+    if estado_actual == "preguntar_sueno":
+        if detectar_ambiguedad(texto_usuario):
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        texto_limpio = texto_usuario.strip().lower()
+
+        mapa_respuestas = {
+            "sí, he notado cambios": 1,
+            "si, he notado cambios": 1,
+            "no, duermo bien": 0,
+            "no estoy seguro": None
+        }
+
+        if texto_limpio in mapa_respuestas:
+            puntuacion = mapa_respuestas[texto_limpio]
+
+            if puntuacion == 1:
+                detalle_sueno = dialog_manager.obtener_detalle_sueno()
+                mensaje = (
+                    "Gracias por compartirlo. Los cambios en el sueño pueden tener un gran impacto en cómo nos sentimos durante el día.\n\n"
+                    f"{detalle_sueno['mensaje']}"
+                )
+
+                resultado_emocional = analizar_sentimiento(texto_usuario)
+                emocion = resultado_emocional.get("estado_emocional", "neutral").lower()
+                confianza = resultado_emocional.get("confianza", "0%")
+
+                datos_guardados["puntuacion_sueno"] = puntuacion
+                datos_guardados["sueno_texto"] = texto_usuario
+                datos_guardados["emocion_sueno"] = emocion
+                datos_guardados["confianza_emocion_sueno"] = confianza
+
+                guardar_interaccion_completa(
+                    session_id=session_id,
+                    estado=estado_actual,
+                    pregunta="¿Has notado últimamente cambios o dificultades con tu sueño?",
+                    respuesta_usuario=texto_usuario,
+                    puntuacion=puntuacion
+                )
+
+                return {
+                    "estado": detalle_sueno["estado"],
+                    "mensaje": mensaje,
+                    "modo_entrada": detalle_sueno["modo_entrada"],
+                    "sugerencias": detalle_sueno.get("sugerencias", [])
+                }, datos_guardados
+
+            elif puntuacion == 0:
+                mensaje = (
+                    "Me alegra saber que estás durmiendo bien. Un buen descanso es esencial para el bienestar emocional.\n\n"
+                    "Seguimos con la siguiente pregunta cuando estés listo/a."
+                )
+                siguiente_estado = dialog_manager.obtener_mensaje_esperar_siguiente_pregunta()["estado"]
+
+            else:
+                return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        else:
+            # Clasificador semántico como fallback
+            intencion = detectar_intencion(texto_usuario)
+
+            if intencion == "afirmativo":
+                puntuacion = 1
+                detalle_sueno = dialog_manager.obtener_detalle_sueno()
+                mensaje = (
+                    "Gracias por compartirlo. Los cambios en el sueño pueden tener un gran impacto en cómo nos sentimos durante el día.\n\n"
+                    f"{detalle_sueno['mensaje']}"
+                )
+
+                resultado_emocional = analizar_sentimiento(texto_usuario)
+                emocion = resultado_emocional.get("estado_emocional", "neutral").lower()
+                confianza = resultado_emocional.get("confianza", "0%")
+
+                datos_guardados["puntuacion_sueno"] = puntuacion
+                datos_guardados["sueno_texto"] = texto_usuario
+                datos_guardados["emocion_sueno"] = emocion
+                datos_guardados["confianza_emocion_sueno"] = confianza
+
+                guardar_interaccion_completa(
+                    session_id=session_id,
+                    estado=estado_actual,
+                    pregunta="¿Has notado últimamente cambios o dificultades con tu sueño?",
+                    respuesta_usuario=texto_usuario,
+                    puntuacion=puntuacion
+                )
+
+                return {
+                    "estado": detalle_sueno["estado"],
+                    "mensaje": mensaje,
+                    "modo_entrada": detalle_sueno["modo_entrada"],
+                    "sugerencias": detalle_sueno.get("sugerencias", [])
+                }, datos_guardados
+
+            elif intencion == "negativo":
+                puntuacion = 0
+                mensaje = (
+                    "Me alegra saber que estás durmiendo bien. Un buen descanso es esencial para el bienestar emocional.\n\n"
+                    "Seguimos con la siguiente pregunta cuando estés listo/a."
+                )
+                siguiente_estado = dialog_manager.obtener_mensaje_esperar_siguiente_pregunta()["estado"]
+
+            else:
+                return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        # Si llegó aquí es porque puntuación == 0 (respuesta negativa)
+        resultado_emocional = analizar_sentimiento(texto_usuario)
+        emocion = resultado_emocional.get("estado_emocional", "neutral").lower()
+        confianza = resultado_emocional.get("confianza", "0%")
+
+        datos_guardados["puntuacion_sueno"] = puntuacion
+        datos_guardados["sueno_texto"] = texto_usuario
+        datos_guardados["emocion_sueno"] = emocion
+        datos_guardados["confianza_emocion_sueno"] = confianza
+
+        guardar_interaccion_completa(
+            session_id=session_id,
+            estado=estado_actual,
+            pregunta="¿Has notado últimamente cambios o dificultades con tu sueño?",
+            respuesta_usuario=texto_usuario,
+            puntuacion=puntuacion
+        )
+
+        return {
+            "estado": siguiente_estado,
+            "mensaje": mensaje,
+            "modo_entrada": "sugerencias",
+            "sugerencias": dialog_manager.obtener_mensaje_esperar_siguiente_pregunta().get("sugerencias", [])
+        }, datos_guardados
+
+
+    # --- Detalle del sueño ---
+    if estado_actual == "detalle_sueno":
+        if detectar_ambiguedad(texto_usuario):
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        datos_guardados["detalle_sueno"] = texto_usuario
+
+        guardar_interaccion_completa(
+            session_id=session_id,
+            estado=estado_actual,
+            pregunta="¿Qué tipo de dificultades has notado con tu sueño?",
+            respuesta_usuario=texto_usuario
+        )
+
         siguiente = dialog_manager.obtener_mensaje_esperar_siguiente_pregunta()
         return {
             "estado": siguiente["estado"],
-            "mensaje": mensaje,
-            "modo_entrada": "sugerencias",
+            "mensaje": "Gracias por explicarlo. Seguimos con la siguiente pregunta cuando estés listo/a.",
+            "modo_entrada": "mixto",
             "sugerencias": siguiente.get("sugerencias", [])
         }, datos_guardados
+
+
 
 
 

@@ -268,8 +268,44 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
             ]
         }
 
+    if estado_actual == "preguntar_sueno":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "Con esta pregunta me refiero a si últimamente has notado cambios como:\n"
+                "- Dormir más o menos de lo habitual\n"
+                "- Dificultades para conciliar el sueño\n"
+                "- Despertarte varias veces durante la noche\n\n"
+                "¿Dirías que te está pasando algo de esto?"
+            ),
+            "modo_entrada": "mixto",
+            "sugerencias": [
+                "Sí, he notado cambios",
+                "No, duermo bien",
+                "No estoy seguro"
+            ]
+        }
 
-
+    if estado_actual == "detalle_sueno":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "No te preocupes si no sabes cómo explicarlo con detalle aún.\n\n"
+                "Puedes contarme si has notado cosas como:\n"
+                "- Dormir menos de lo habitual\n"
+                "- Despertarte con frecuencia\n"
+                "- Tener dificultad para quedarte dormido/a\n"
+                "- Dormir demasiado tiempo\n\n"
+                "¿Cuál de estas dificultades te resulta más familiar?"
+            ),
+            "modo_entrada": "mixto",
+            "sugerencias": [
+                "Me cuesta dormirme",
+                "Me despierto mucho",
+                "Duermo menos horas",
+                "Duermo más de lo habitual"
+            ]
+        }
 
 
     return {
