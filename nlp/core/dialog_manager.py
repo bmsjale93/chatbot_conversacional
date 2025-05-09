@@ -386,6 +386,58 @@ def obtener_detalle_agitacion() -> dict:
         ]
     }
 
+def obtener_mensaje_antecedentes_generales() -> dict:
+    return {
+        "estado": "preguntar_antecedentes_generales",
+        "mensaje": (
+            "Cuando sientes tristeza, ¿hay algo que suela desencadenarla?\n\n"
+            "Por ejemplo:\n"
+            "- Situaciones específicas\n"
+            "- Pensamientos recurrentes\n"
+            "- Ciertas preocupaciones o recuerdos\n\n"
+            "Cuéntame lo que sueles notar antes de sentirte así."
+        ),
+        "modo_entrada": "mixto",
+        "sugerencias": [
+            "Me afectan ciertas situaciones familiares",
+            "Los pensamientos negativos me hacen sentir triste",
+            "Me preocupa mucho el futuro",
+            "No lo tengo claro, pero creo que algunas cosas lo provocan"
+        ]
+    }
+
+def obtener_mensaje_consecuentes_generales_1() -> dict:
+    return {
+        "estado": "preguntar_consecuentes_generales_1",
+        "mensaje": (
+            "Cuando sientes tristeza, ¿qué sueles hacer?\n\n"
+            "Por ejemplo, hay personas que llaman a un familiar, otras comen algo dulce, etc. Cuéntame con detalle qué haces tú."
+        ),
+        "modo_entrada": "mixto",
+        "sugerencias": [
+            "Llamo a un familiar o amigo",
+            "Me encierro en mi habitación",
+            "Como algo dulce o salado",
+            "No suelo hacer nada en particular"
+        ]
+    }
+
+def obtener_mensaje_consecuentes_generales_2() -> dict:
+    return {
+        "estado": "preguntar_consecuentes_generales_2",
+        "mensaje": (
+            "¿Has notado cambios en tu comportamiento cuando sientes tristeza?\n\n"
+            "Por ejemplo, evitar situaciones sociales, dejar de hacer ciertas actividades, etc. Cuéntame con detalle qué cambios has notado."
+        ),
+        "modo_entrada": "mixto",
+        "sugerencias": [
+            "Evito salir de casa",
+            "No hablo con nadie",
+            "He dejado de hacer cosas que me gustaban",
+            "No he notado cambios"
+        ]
+    }
+
 
 def obtener_mensaje_esperar_siguiente_pregunta() -> dict:
     return {

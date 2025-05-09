@@ -62,6 +62,7 @@ ESTADOS_DIALOG_MANAGER = {
     "detalle_concentracion": dialog_manager.obtener_detalle_concentracion,
     "preguntar_agitacion": dialog_manager.obtener_mensaje_agitacion,
     "detalle_agitacion": dialog_manager.obtener_detalle_agitacion,
+    "preguntar_antecedentes_generales": dialog_manager.obtener_mensaje_antecedentes_generales,
 
     "esperar_siguiente_pregunta": dialog_manager.obtener_mensaje_esperar_siguiente_pregunta,
 }
@@ -1097,7 +1098,6 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             "sugerencias": siguiente.get("sugerencias", [])
         }, datos_guardados
 
-
     # --- Preguntar Agitación ---
     if estado_actual == "preguntar_agitacion":
         if detectar_ambiguedad(texto_usuario):
@@ -1152,7 +1152,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
                 f"{siguiente['mensaje']}"
             )
         elif puntuacion == 0:
-            siguiente = dialog_manager.obtener_mensaje_esperar_siguiente_pregunta()
+            siguiente = dialog_manager.obtener_mensaje_antecedentes_generales()
             mensaje = (
                 "Me alegra saber que no has notado inquietud últimamente.\n\n"
                 f"{siguiente['mensaje']}"
@@ -1166,7 +1166,6 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             "modo_entrada": siguiente["modo_entrada"],
             "sugerencias": siguiente.get("sugerencias", [])
         }, datos_guardados
-
 
     # --- Detalle Agitación ---
     if estado_actual == "detalle_agitacion":
@@ -1188,7 +1187,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             respuesta_usuario=texto_usuario
         )
 
-        siguiente = dialog_manager.obtener_mensaje_esperar_siguiente_pregunta()
+        siguiente = dialog_manager.obtener_mensaje_antecedentes_generales()
         return {
             "estado": siguiente["estado"],
             "mensaje": (
@@ -1199,6 +1198,104 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             "sugerencias": siguiente.get("sugerencias", [])
         }, datos_guardados
 
+
+    # --- APARTADO ANTECEDENTES ---
+    # --- Preguntar Antecedentes Generales ---
+    if estado_actual == "preguntar_antecedentes_generales":
+        if detectar_ambiguedad(texto_usuario):
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        resultado_emocional = analizar_sentimiento(texto_usuario)
+        emocion = resultado_emocional.get("estado_emocional", "neutral").lower()
+        confianza = resultado_emocional.get("confianza", "0%")
+
+        datos_guardados["antecedentes_generales"] = texto_usuario
+        datos_guardados["emocion_antecedentes_generales"] = emocion
+        datos_guardados["confianza_emocion_antecedentes_generales"] = confianza
+
+        guardar_interaccion_completa(
+            session_id=session_id,
+            estado=estado_actual,
+            pregunta="¿Hay algo que suela desencadenar tu tristeza, como situaciones, pensamientos o preocupaciones?",
+            respuesta_usuario=texto_usuario
+        )
+
+        siguiente = dialog_manager.obtener_mensaje_consecuentes_generales_1()
+        mensaje = (
+            "Gracias por compartirlo. Entender qué desencadena esas emociones es un paso importante para gestionarlas mejor.\n\n"
+            f"{siguiente['mensaje']}"
+        )
+
+        return {
+            "estado": siguiente["estado"],
+            "mensaje": mensaje,
+            "modo_entrada": siguiente["modo_entrada"],
+            "sugerencias": siguiente.get("sugerencias", [])
+        }, datos_guardados
+
+
+    # --- Preguntar Consecuentes Generales 1 ---
+    if estado_actual == "preguntar_consecuentes_generales_1":
+        if detectar_ambiguedad(texto_usuario):
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        resultado_emocional = analizar_sentimiento(texto_usuario)
+        emocion = resultado_emocional.get("estado_emocional", "neutral").lower()
+        confianza = resultado_emocional.get("confianza", "0%")
+
+        datos_guardados["consecuentes_generales_1"] = texto_usuario
+        datos_guardados["emocion_consecuentes_generales_1"] = emocion
+        datos_guardados["confianza_emocion_consecuentes_generales_1"] = confianza
+
+        guardar_interaccion_completa(
+            session_id=session_id,
+            estado=estado_actual,
+            pregunta="Cuando sientes tristeza, ¿qué sueles hacer? ¿Hay algo que te ayude como llamar a alguien, comer algo, etc.?",
+            respuesta_usuario=texto_usuario
+        )
+
+        siguiente = dialog_manager.obtener_mensaje_consecuentes_generales_2()
+        return {
+            "estado": siguiente["estado"],
+            "mensaje": (
+                "Gracias por compartirlo. Saber cómo reaccionamos cuando nos sentimos tristes puede ayudarnos a comprender nuestras emociones.\n\n"
+                f"{siguiente['mensaje']}"
+            ),
+            "modo_entrada": siguiente["modo_entrada"],
+            "sugerencias": siguiente.get("sugerencias", [])
+        }, datos_guardados
+
+
+    # --- Preguntar Consecuentes Generales 2 ---
+    if estado_actual == "preguntar_consecuentes_generales_2":
+        if detectar_ambiguedad(texto_usuario):
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        resultado_emocional = analizar_sentimiento(texto_usuario)
+        emocion = resultado_emocional.get("estado_emocional", "neutral").lower()
+        confianza = resultado_emocional.get("confianza", "0%")
+
+        datos_guardados["consecuentes_generales_2"] = texto_usuario
+        datos_guardados["emocion_consecuentes_generales_2"] = emocion
+        datos_guardados["confianza_emocion_consecuentes_generales_2"] = confianza
+
+        guardar_interaccion_completa(
+            session_id=session_id,
+            estado=estado_actual,
+            pregunta="¿Has notado cambios en tu comportamiento cuando sientes tristeza? Por ejemplo, evitar situaciones.",
+            respuesta_usuario=texto_usuario
+        )
+
+        siguiente = dialog_manager.obtener_mensaje_esperar_siguiente_pregunta()
+        return {
+            "estado": siguiente["estado"],
+            "mensaje": (
+                "Gracias por contármelo. Los cambios en el comportamiento pueden ser señales importantes de cómo estamos afrontando la tristeza.\n\n"
+                f"{siguiente['mensaje']}"
+            ),
+            "modo_entrada": siguiente["modo_entrada"],
+            "sugerencias": siguiente.get("sugerencias", [])
+        }, datos_guardados
 
 
 

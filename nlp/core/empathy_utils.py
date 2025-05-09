@@ -420,6 +420,64 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
                 "No puedo parar quieto"
             ]
         }
+    
+    if estado_actual == "preguntar_antecedentes_generales":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "No pasa nada si no lo tienes del todo claro. Me refiero a si hay algo que suele aparecer antes de sentirte triste, como:\n"
+                "- Pensamientos que se repiten mucho\n"
+                "- Problemas personales o laborales\n"
+                "- Preocupaciones constantes o recuerdos dolorosos\n\n"
+                "¿Te suena algo de esto?"
+            ),
+            "modo_entrada": "mixto",
+            "sugerencias": [
+                "Me afectan ciertos pensamientos",
+                "Las discusiones me hacen sentir mal",
+                "Me preocupo por cosas del pasado",
+                "No estoy seguro"
+            ]
+        }
+
+    if estado_actual == "preguntar_consecuentes_generales_1":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "No pasa nada, puedes tomarte un momento para pensarlo. Algunas personas, cuando se sienten tristes, hacen cosas como:\n"
+                "- Llamar o escribir a alguien\n"
+                "- Comer ciertos alimentos\n"
+                "- Ver series o dormir más\n\n"
+                "¿Qué haces tú normalmente en esos momentos?"
+            ),
+            "modo_entrada": "mixto",
+            "sugerencias": [
+                "Llamo a alguien de confianza",
+                "Como algo dulce",
+                "No suelo hacer nada especial",
+                "Me encierro en mi habitación"
+            ]
+        }
+
+    if estado_actual == "preguntar_consecuentes_generales_2":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "A veces puede costar identificar cambios en nuestro comportamiento.\n\n"
+                "Piensa si haces algo diferente cuando te sientes triste, como:\n"
+                "- Evitar situaciones sociales\n"
+                "- Cambiar tu rutina\n"
+                "- Dejar actividades que antes te gustaban\n\n"
+                "¿Te ha pasado algo así?"
+            ),
+            "modo_entrada": "mixto",
+            "sugerencias": [
+                "Evito hablar con otras personas",
+                "He dejado de hacer ejercicio",
+                "No salgo de casa",
+                "No he notado ningún cambio"
+            ]
+        }
 
     return {
         "estado": estado_actual,
