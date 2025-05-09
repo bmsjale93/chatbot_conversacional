@@ -516,6 +516,46 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
             ]
         }
 
+    if estado_actual == "preguntar_estrategias_1":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "Si no lo tienes claro, piensa en lo que sueles hacer cuando te sientes triste. Algunas personas, por ejemplo:\n"
+                "- Hablan con alguien de confianza\n"
+                "- Salen a caminar o a despejarse\n"
+                "- Escriben lo que sienten o lo que les preocupa\n"
+                "- Escuchan música para relajarse\n\n"
+                "¿Tú qué sueles hacer en esos momentos?"
+            ),
+            "modo_entrada": "mixto",
+            "sugerencias": [
+                "Hablo con un amigo",
+                "Salgo a caminar",
+                "Escucho música",
+                "Escribo lo que siento"
+            ]
+        }
+
+    if estado_actual == "preguntar_estrategias_2":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "No pasa nada si necesitas pensarlo un momento. Me refiero a si hay alguna actividad que te ayude a sentirte mejor cuando estás triste. Algunas personas, por ejemplo:\n"
+                "- Hacen ejercicio físico\n"
+                "- Ven alguna película o serie que les guste\n"
+                "- Practican técnicas de relajación o meditación\n"
+                "- Pasan tiempo con su mascota\n\n"
+                "¿Hay algo que a ti te funcione?"
+            ),
+            "modo_entrada": "mixto",
+            "sugerencias": [
+                "Hago ejercicio",
+                "Practico relajación",
+                "Veo una película",
+                "Medito"
+            ]
+        }
+
 
     return {
         "estado": estado_actual,

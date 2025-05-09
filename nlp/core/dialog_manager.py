@@ -471,6 +471,45 @@ def obtener_detalle_impacto_diario() -> dict:
         ]
     }
 
+def obtener_mensaje_estrategias_1() -> dict:
+    return {
+        "estado": "preguntar_estrategias_1",
+        "mensaje": "¿Qué cosas sueles hacer para lidiar con la tristeza?",
+        "modo_entrada": "mixto",
+        "sugerencias": [
+            "Hablo con un amigo",
+            "Salgo a caminar",
+            "Escucho música",
+            "Escribo lo que siento"
+        ]
+    }
+
+def obtener_mensaje_estrategias_2() -> dict:
+    return {
+        "estado": "preguntar_estrategias_2",
+        "mensaje": "¿Existen actividades o estrategias que te ayuden a sentirte mejor cuando sientes tristeza?",
+        "modo_entrada": "mixto",
+        "sugerencias": [
+            "Hago ejercicio",
+            "Practico relajación",
+            "Veo una película",
+            "Medito"
+        ]
+    }
+
+def obtener_mensaje_cierre(nombre_usuario: str) -> dict:
+    return {
+        "estado": "cierre_conversacion",
+        "mensaje": (
+            f"Muchas gracias {nombre_usuario} por compartir cómo te has sentido últimamente.\n\n"
+            "Si sientes que el bajo estado de ánimo interfiere en tu vida diaria, hablar con un profesional puede ayudarte a encontrar "
+            "estrategias eficaces para manejarlo.\n\n"
+            "Puedes presentarle el informe que se genera a continuación para agilizar su trabajo."
+        ),
+        "modo_entrada": "ninguno",
+        "sugerencias": []
+    }
+
 
 def obtener_mensaje_esperar_siguiente_pregunta() -> dict:
     return {

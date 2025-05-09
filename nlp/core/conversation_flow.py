@@ -67,9 +67,9 @@ ESTADOS_DIALOG_MANAGER = {
     "preguntar_consecuentes_generales_2": dialog_manager.obtener_mensaje_consecuentes_generales_2,
     "preguntar_impacto_diario": dialog_manager.obtener_mensaje_impacto_diario,
     "detalle_impacto_diario": dialog_manager.obtener_detalle_impacto_diario,
-
-
-
+    "preguntar_estrategias_1": dialog_manager.obtener_mensaje_estrategias_1,
+    "preguntar_estrategias_2": dialog_manager.obtener_mensaje_estrategias_2,
+    "cierre_conversacion": dialog_manager.obtener_mensaje_cierre,
     "esperar_siguiente_pregunta": dialog_manager.obtener_mensaje_esperar_siguiente_pregunta,
 }
 
@@ -1357,7 +1357,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
                 f"{siguiente['mensaje']}"
             )
         elif puntuacion == 0:
-            siguiente = dialog_manager.obtener_mensaje_esperar_siguiente_pregunta()
+            siguiente = dialog_manager.obtener_mensaje_estrategias_1()
             mensaje = (
                 "Entiendo. Me alegra saber que no está teniendo un gran impacto en tu día a día.\n\n"
                 f"{siguiente['mensaje']}"
@@ -1392,7 +1392,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             respuesta_usuario=texto_usuario
         )
 
-        siguiente = dialog_manager.obtener_mensaje_esperar_siguiente_pregunta()
+        siguiente = dialog_manager.obtener_mensaje_estrategias_1()
         return {
             "estado": siguiente["estado"],
             "mensaje": (
@@ -1403,6 +1403,75 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             "sugerencias": siguiente.get("sugerencias", [])
         }, datos_guardados
 
+
+    # --- APARTADO ESTRATEGIAS DE AFRONTAMIENTO ---
+    # --- Preguntar Estrategias de Afrontamiento ---
+    if estado_actual == "preguntar_estrategias_1":
+        if detectar_ambiguedad(texto_usuario):
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        # Analizar emoción
+        resultado_emocional = analizar_sentimiento(texto_usuario)
+        emocion = resultado_emocional.get("estado_emocional", "neutral").lower()
+        confianza = resultado_emocional.get("confianza", "0%")
+
+        # Guardar respuesta
+        datos_guardados["estrategias_1"] = texto_usuario
+        datos_guardados["emocion_estrategias_1"] = emocion
+        datos_guardados["confianza_emocion_estrategias_1"] = confianza
+
+        guardar_interaccion_completa(
+            session_id=session_id,
+            estado=estado_actual,
+            pregunta="¿Qué cosas sueles hacer para lidiar con la tristeza?",
+            respuesta_usuario=texto_usuario
+        )
+
+        siguiente = dialog_manager.obtener_mensaje_estrategias_2()
+        return {
+            "estado": siguiente["estado"],
+            "mensaje": (
+                "Gracias por compartirlo. Saber tus recursos de afrontamiento es muy valioso.\n\n"
+                f"{siguiente['mensaje']}"
+            ),
+            "modo_entrada": siguiente["modo_entrada"],
+            "sugerencias": siguiente.get("sugerencias", [])
+        }, datos_guardados
+
+
+    # --- Preguntar Estrategias de Afrontamiento ---
+    if estado_actual == "preguntar_estrategias_2":
+        if detectar_ambiguedad(texto_usuario):
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        # Analizar emoción
+        resultado_emocional = analizar_sentimiento(texto_usuario)
+        emocion = resultado_emocional.get("estado_emocional", "neutral").lower()
+        confianza = resultado_emocional.get("confianza", "0%")
+
+        # Guardar respuesta
+        datos_guardados["estrategias_2"] = texto_usuario
+        datos_guardados["emocion_estrategias_2"] = emocion
+        datos_guardados["confianza_emocion_estrategias_2"] = confianza
+
+        guardar_interaccion_completa(
+            session_id=session_id,
+            estado=estado_actual,
+            pregunta="¿Existen actividades o estrategias que te ayuden a sentirte mejor cuando sientes tristeza?",
+            respuesta_usuario=texto_usuario
+        )
+
+        # Obtener nombre del usuario
+        nombre = datos_guardados.get("nombre_usuario", "amigo/a")
+
+        # Transición al cierre con nombre personalizado
+        cierre = dialog_manager.obtener_mensaje_cierre(nombre)
+        return {
+            "estado": cierre["estado"],
+            "mensaje": cierre["mensaje"],
+            "modo_entrada": cierre["modo_entrada"],
+            "sugerencias": cierre.get("sugerencias", [])
+        }, datos_guardados
 
 
 
