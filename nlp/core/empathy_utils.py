@@ -479,6 +479,44 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
             ]
         }
 
+    if estado_actual == "preguntar_impacto_diario":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "Está bien si no estás seguro/a. Me refiero a si tus sentimientos recientes han afectado cosas importantes en tu día a día, como:\n"
+                "- Rendimiento en el trabajo o los estudios\n"
+                "- Relaciones con otras personas\n"
+                "- Cuidado de tu salud o bienestar\n\n"
+                "¿Sientes que algo de esto ha cambiado últimamente?"
+            ),
+            "modo_entrada": "mixto",
+            "sugerencias": [
+                "Sí, ha afectado mi vida diaria",
+                "No, no ha afectado mi vida diaria",
+                "No estoy seguro"
+            ]
+        }
+
+    if estado_actual == "detalle_impacto_diario":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "Gracias por contármelo. Si te resulta difícil explicarlo, aquí tienes algunos ejemplos de lo que podrías contarme:\n"
+                "- Te cuesta seguir el ritmo en tus estudios o trabajo\n"
+                "- Has dejado de hacer cosas que antes disfrutabas\n"
+                "- Te aíslas o evitas a otras personas\n\n"
+                "¿Cuál de estas situaciones te resulta más familiar?"
+            ),
+            "modo_entrada": "mixto",
+            "sugerencias": [
+                "No tengo ganas de socializar",
+                "Me cuesta rendir en el trabajo",
+                "He dejado de hacer actividades que me gustaban",
+                "Descuido mi rutina"
+            ]
+        }
+
+
     return {
         "estado": estado_actual,
         "mensaje": (

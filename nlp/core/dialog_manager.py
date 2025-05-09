@@ -438,6 +438,39 @@ def obtener_mensaje_consecuentes_generales_2() -> dict:
         ]
     }
 
+def obtener_mensaje_impacto_diario() -> dict:
+    return {
+        "estado": "preguntar_impacto_diario",
+        "mensaje": (
+            "¿Dirías que estos sentimientos han afectado tu vida diaria? Por ejemplo, en el trabajo, estudios, relaciones sociales o bienestar personal."
+        ),
+        "modo_entrada": "mixto",
+        "sugerencias": [
+            "Sí, ha afectado mi vida diaria",
+            "No, no ha afectado mi vida diaria",
+            "No estoy seguro"
+        ]
+    }
+
+def obtener_detalle_impacto_diario() -> dict:
+    return {
+        "estado": "detalle_impacto_diario",
+        "mensaje": (
+            "¿Podrías contarme en qué aspectos de tu vida diaria sientes más dificultades debido a estos sentimientos?\n\n"
+            "Por ejemplo:\n"
+            "- Te cuesta concentrarte en el trabajo o estudios\n"
+            "- Evitas reuniones sociales o familiares\n"
+            "- Descuidas tu autocuidado o bienestar personal"
+        ),
+        "modo_entrada": "mixto",
+        "sugerencias": [
+            "Me cuesta rendir en el trabajo",
+            "Evito a otras personas",
+            "Descuido mi bienestar",
+            "Me cuesta seguir rutinas"
+        ]
+    }
+
 
 def obtener_mensaje_esperar_siguiente_pregunta() -> dict:
     return {

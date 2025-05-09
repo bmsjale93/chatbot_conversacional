@@ -63,6 +63,12 @@ ESTADOS_DIALOG_MANAGER = {
     "preguntar_agitacion": dialog_manager.obtener_mensaje_agitacion,
     "detalle_agitacion": dialog_manager.obtener_detalle_agitacion,
     "preguntar_antecedentes_generales": dialog_manager.obtener_mensaje_antecedentes_generales,
+    "preguntar_consecuentes_generales_1": dialog_manager.obtener_mensaje_consecuentes_generales_1,
+    "preguntar_consecuentes_generales_2": dialog_manager.obtener_mensaje_consecuentes_generales_2,
+    "preguntar_impacto_diario": dialog_manager.obtener_mensaje_impacto_diario,
+    "detalle_impacto_diario": dialog_manager.obtener_detalle_impacto_diario,
+
+
 
     "esperar_siguiente_pregunta": dialog_manager.obtener_mensaje_esperar_siguiente_pregunta,
 }
@@ -1286,7 +1292,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             respuesta_usuario=texto_usuario
         )
 
-        siguiente = dialog_manager.obtener_mensaje_esperar_siguiente_pregunta()
+        siguiente = dialog_manager.obtener_mensaje_impacto_diario()
         return {
             "estado": siguiente["estado"],
             "mensaje": (
@@ -1297,6 +1303,105 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             "sugerencias": siguiente.get("sugerencias", [])
         }, datos_guardados
 
+
+    # --- APARTADO IMPACTO EN LA VIDA DIARIA ---
+    # --- Preguntar Impacto Diario ---
+    if estado_actual == "preguntar_impacto_diario":
+        if detectar_ambiguedad(texto_usuario):
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        texto_limpio = limpiar_texto(texto_usuario)
+
+        mapa_respuestas = {
+            "sí, ha afectado mi vida diaria": 1,
+            "no, no ha afectado mi vida diaria": 0,
+            "no estoy seguro": None
+        }
+
+        mapa_respuestas_limpio = {limpiar_texto(k): v for k, v in mapa_respuestas.items()}
+        puntuacion = mapa_respuestas_limpio.get(texto_limpio)
+
+        if puntuacion is None:
+            intencion = detectar_intencion(texto_usuario)
+            print(f"[DEBUG] Intención detectada: {intencion}")
+            if intencion == "afirmativo":
+                puntuacion = 1
+            elif intencion == "negativo":
+                puntuacion = 0
+            else:
+                return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        print(f"[DEBUG] Puntuación final asignada: {puntuacion}")
+
+        resultado_emocional = analizar_sentimiento(texto_usuario)
+        emocion = resultado_emocional.get("estado_emocional", "neutral").lower()
+        confianza = resultado_emocional.get("confianza", "0%")
+
+        datos_guardados["puntuacion_impacto_diario"] = puntuacion
+        datos_guardados["impacto_diario_texto"] = texto_usuario
+        datos_guardados["emocion_impacto_diario"] = emocion
+        datos_guardados["confianza_emocion_impacto_diario"] = confianza
+
+        guardar_interaccion_completa(
+            session_id=session_id,
+            estado=estado_actual,
+            pregunta="¿Dirías que estos sentimientos han afectado tu vida diaria? Por ejemplo, en el trabajo, estudios, relaciones sociales o bienestar personal.",
+            respuesta_usuario=texto_usuario,
+            puntuacion=puntuacion
+        )
+
+        if puntuacion == 1:
+            siguiente = dialog_manager.obtener_detalle_impacto_diario()
+            mensaje = (
+                "Gracias por compartirlo. Es importante identificar las áreas en las que estos sentimientos nos afectan.\n\n"
+                f"{siguiente['mensaje']}"
+            )
+        elif puntuacion == 0:
+            siguiente = dialog_manager.obtener_mensaje_esperar_siguiente_pregunta()
+            mensaje = (
+                "Entiendo. Me alegra saber que no está teniendo un gran impacto en tu día a día.\n\n"
+                f"{siguiente['mensaje']}"
+            )
+        else:
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        return {
+            "estado": siguiente["estado"],
+            "mensaje": mensaje,
+            "modo_entrada": siguiente["modo_entrada"],
+            "sugerencias": siguiente.get("sugerencias", [])
+        }, datos_guardados
+
+    # --- Detalle Impacto Diario ---
+    if estado_actual == "detalle_impacto_diario":
+        if detectar_ambiguedad(texto_usuario):
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        resultado_emocional = analizar_sentimiento(texto_usuario)
+        emocion = resultado_emocional.get("estado_emocional", "neutral").lower()
+        confianza = resultado_emocional.get("confianza", "0%")
+
+        datos_guardados["detalle_impacto_diario"] = texto_usuario
+        datos_guardados["emocion_detalle_impacto_diario"] = emocion
+        datos_guardados["confianza_emocion_detalle_impacto_diario"] = confianza
+
+        guardar_interaccion_completa(
+            session_id=session_id,
+            estado=estado_actual,
+            pregunta="¿En qué aspectos sientes más dificultades en tu día a día debido a estos sentimientos?",
+            respuesta_usuario=texto_usuario
+        )
+
+        siguiente = dialog_manager.obtener_mensaje_esperar_siguiente_pregunta()
+        return {
+            "estado": siguiente["estado"],
+            "mensaje": (
+                "Gracias por contármelo. Reconocer los efectos en tu día a día nos ayuda a trabajar sobre ellos de forma más precisa.\n\n"
+                f"{siguiente['mensaje']}"
+            ),
+            "modo_entrada": siguiente["modo_entrada"],
+            "sugerencias": siguiente.get("sugerencias", [])
+        }, datos_guardados
 
 
 
