@@ -311,6 +311,81 @@ def obtener_detalle_apetito() -> dict:
         ]
     }
 
+def obtener_mensaje_concentracion() -> dict:
+    return {
+        "estado": "preguntar_concentracion",
+        "mensaje": (
+            "Cuando tenemos el ánimo bajo, puede ser difícil concentrarnos.\n\n"
+            "¿Te ha costado enfocarte en actividades como leer, trabajar, seguir una conversación, etc.?\n"
+            "Cuéntame si te ocurre y con qué actividades.\n\n"
+            "Si no estás seguro/a, también puedes decírmelo."
+        ),
+        "modo_entrada": "mixto",
+        "sugerencias": [
+            "Sí, me cuesta concentrarme",
+            "No, me concentro bien",
+            "No estoy seguro"
+        ]
+    }
+
+def obtener_detalle_concentracion() -> dict:
+    return {
+        "estado": "detalle_concentracion",
+        "mensaje": (
+            "¿En qué situaciones sientes que te cuesta más concentrarte?\n\n"
+            "Por ejemplo:\n"
+            "- Al leer\n"
+            "- Al mantener una conversación\n"
+            "- Al trabajar o estudiar\n"
+            "- Al hacer tareas cotidianas"
+        ),
+        "modo_entrada": "mixto",
+        "sugerencias": [
+            "Al leer",
+            "Al trabajar",
+            "Al hablar con gente",
+            "Con tareas sencillas"
+        ]
+    }
+
+def obtener_mensaje_agitacion() -> dict:
+    return {
+        "estado": "preguntar_agitacion",
+        "mensaje": (
+            "¿Has notado que últimamente sientes inquietud o agitación?\n\n"
+            "Por ejemplo:\n"
+            "- Sensación de no poder estar quieto\n"
+            "- Moverte constantemente\n"
+            "- Sentirte inquieto/a sin saber por qué\n\n"
+            "Puedes contestar con sinceridad, también si no estás seguro/a."
+        ),
+        "modo_entrada": "mixto",
+        "sugerencias": [
+            "Sí, me siento inquieto",
+            "No, estoy tranquilo",
+            "No estoy seguro"
+        ]
+    }
+
+def obtener_detalle_agitacion() -> dict:
+    return {
+        "estado": "detalle_agitacion",
+        "mensaje": (
+            "Gracias por tu sinceridad. ¿Podrías describirme cómo sientes esa inquietud o agitación?\n\n"
+            "Por ejemplo:\n"
+            "- Siento una energía que no puedo controlar\n"
+            "- Me muevo sin parar o no puedo relajarme\n"
+            "- Tengo sensación de estar acelerado sin motivo"
+        ),
+        "modo_entrada": "mixto",
+        "sugerencias": [
+            "Me cuesta estar quieto",
+            "Siento mucha energía en el cuerpo",
+            "No consigo relajarme",
+            "Estoy inquieto sin motivo"
+        ]
+    }
+
 
 def obtener_mensaje_esperar_siguiente_pregunta() -> dict:
     return {

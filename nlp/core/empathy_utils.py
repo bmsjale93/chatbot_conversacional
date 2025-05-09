@@ -346,6 +346,80 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
             ]
         }
 
+    if estado_actual == "preguntar_concentracion":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "Gracias por tu respuesta. Me refiero a si últimamente te ha costado mantener la atención en actividades como:\n"
+                "- Leer un libro o artículo\n"
+                "- Seguir una conversación\n"
+                "- Hacer tareas del trabajo o los estudios\n\n"
+                "¿Te ha ocurrido algo de esto recientemente?"
+            ),
+            "modo_entrada": "mixto",
+            "sugerencias": [
+                "Sí, me cuesta concentrarme",
+                "No, me concentro bien",
+                "No estoy seguro"
+            ]
+        }
+
+    if estado_actual == "detalle_concentracion":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "Está bien, a veces es difícil identificar exactamente en qué momentos falla la concentración.\n\n"
+                "Puedes contarme si te pasa por ejemplo:\n"
+                "- Al leer o estudiar\n"
+                "- Cuando estás hablando con alguien\n"
+                "- Mientras haces tareas que antes hacías con facilidad\n\n"
+                "¿En qué situaciones lo notas más?"
+            ),
+            "modo_entrada": "mixto",
+            "sugerencias": [
+                "Leyendo",
+                "Hablando con otras personas",
+                "Trabajando o estudiando",
+                "Haciendo tareas diarias"
+            ]
+        }
+
+    if estado_actual == "preguntar_agitacion":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "No pasa nada si no estás seguro/a. Me refiero a si últimamente has sentido inquietud o agitación física o mental, como:\n"
+                "- Necesidad de moverte constantemente\n"
+                "- Sensación de estar acelerado o intranquilo\n"
+                "- Dificultad para estar en calma\n\n"
+                "¿Te ha ocurrido algo así?"
+            ),
+            "modo_entrada": "mixto",
+            "sugerencias": [
+                "Sí, me siento inquieto",
+                "No, estoy tranquilo",
+                "No estoy seguro"
+            ]
+        }
+
+    if estado_actual == "detalle_agitacion":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "Gracias por comentarlo. La inquietud puede expresarse de muchas formas, como:\n"
+                "- Moverte de un lado a otro\n"
+                "- Sentir ansiedad en el cuerpo\n"
+                "- Tener una sensación de urgencia constante\n\n"
+                "Cuéntame cómo lo estás viviendo tú."
+            ),
+            "modo_entrada": "mixto",
+            "sugerencias": [
+                "Tengo sensación de urgencia constante",
+                "Me muevo sin parar",
+                "Me siento tenso e inquieto",
+                "No puedo parar quieto"
+            ]
+        }
 
     return {
         "estado": estado_actual,

@@ -58,8 +58,10 @@ ESTADOS_DIALOG_MANAGER = {
     "detalle_sueno": dialog_manager.obtener_detalle_sueno,
     "preguntar_apetito": dialog_manager.obtener_mensaje_apetito,
     "detalle_apetito": dialog_manager.obtener_detalle_apetito,
-
-
+    "preguntar_concentracion": dialog_manager.obtener_mensaje_concentracion,
+    "detalle_concentracion": dialog_manager.obtener_detalle_concentracion,
+    "preguntar_agitacion": dialog_manager.obtener_mensaje_agitacion,
+    "detalle_agitacion": dialog_manager.obtener_detalle_agitacion,
 
     "esperar_siguiente_pregunta": dialog_manager.obtener_mensaje_esperar_siguiente_pregunta,
 }
@@ -947,7 +949,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             }, datos_guardados
 
         elif puntuacion == 0:
-            siguiente = dialog_manager.obtener_mensaje_esperar_siguiente_pregunta()
+            siguiente = dialog_manager.obtener_mensaje_concentracion()
             mensaje = (
                 "Está bien, comer con normalidad es una buena señal.\n\n"
                 f"{siguiente['mensaje']}"
@@ -983,7 +985,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             respuesta_usuario=texto_usuario
         )
 
-        siguiente = dialog_manager.obtener_mensaje_esperar_siguiente_pregunta()
+        siguiente = dialog_manager.obtener_mensaje_concentracion()
         return {
             "estado": siguiente["estado"],
             "mensaje": (
@@ -994,8 +996,208 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             "sugerencias": siguiente.get("sugerencias", [])
         }, datos_guardados
 
+    # --- Preguntar Concentración ---
+    if estado_actual == "preguntar_concentracion":
+        if detectar_ambiguedad(texto_usuario):
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        texto_limpio = limpiar_texto(texto_usuario)
+
+        # Solo mapear sugerencias exactas
+        mapa_respuestas = {
+            "sí, me cuesta concentrarme": 1,
+            "no, me concentro bien": 0,
+            "no estoy seguro": None
+        }
+
+        mapa_respuestas_limpio = {limpiar_texto(k): v for k, v in mapa_respuestas.items()}
+        puntuacion = mapa_respuestas_limpio.get(texto_limpio)
+
+        # Si no coincide con sugerencias, usar intención
+        if puntuacion is None:
+            intencion = detectar_intencion(texto_usuario)
+            print(f"[DEBUG] Intención detectada: {intencion}")
+            if intencion == "afirmativo":
+                puntuacion = 1
+            elif intencion == "negativo":
+                puntuacion = 0
+            else:
+                return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        print(f"[DEBUG] Puntuación final asignada: {puntuacion}")
+
+        resultado_emocional = analizar_sentimiento(texto_usuario)
+        emocion = resultado_emocional.get("estado_emocional", "neutral").lower()
+        confianza = resultado_emocional.get("confianza", "0%")
+
+        datos_guardados["puntuacion_concentracion"] = puntuacion
+        datos_guardados["concentracion_texto"] = texto_usuario
+        datos_guardados["emocion_concentracion"] = emocion
+        datos_guardados["confianza_emocion_concentracion"] = confianza
+
+        guardar_interaccion_completa(
+            session_id=session_id,
+            estado=estado_actual,
+            pregunta="¿Te ha costado concentrarte en actividades como leer, trabajar o seguir una conversación?",
+            respuesta_usuario=texto_usuario,
+            puntuacion=puntuacion
+        )
+
+        if puntuacion == 1:
+            siguiente = dialog_manager.obtener_detalle_concentracion()
+            mensaje = (
+                "Gracias por compartirlo. Es común que la falta de concentración acompañe a estados emocionales bajos.\n\n"
+                f"{siguiente['mensaje']}"
+            )
+        elif puntuacion == 0:
+            siguiente = dialog_manager.obtener_mensaje_agitacion()
+            mensaje = (
+                "Está bien, mantener una buena concentración es un buen indicador de estabilidad.\n\n"
+                f"{siguiente['mensaje']}"
+            )
+        else:
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        return {
+            "estado": siguiente["estado"],
+            "mensaje": mensaje,
+            "modo_entrada": siguiente["modo_entrada"],
+            "sugerencias": siguiente.get("sugerencias", [])
+        }, datos_guardados
 
 
+    # --- Detalle de la Concentración ---
+    if estado_actual == "detalle_concentracion":
+        if detectar_ambiguedad(texto_usuario):
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        resultado_emocional = analizar_sentimiento(texto_usuario)
+        emocion = resultado_emocional.get("estado_emocional", "neutral").lower()
+        confianza = resultado_emocional.get("confianza", "0%")
+
+        datos_guardados["detalle_concentracion"] = texto_usuario
+        datos_guardados["emocion_detalle_concentracion"] = emocion
+        datos_guardados["confianza_emocion_detalle_concentracion"] = confianza
+
+        guardar_interaccion_completa(
+            session_id=session_id,
+            estado=estado_actual,
+            pregunta="¿Con qué actividades te cuesta más concentrarte?",
+            respuesta_usuario=texto_usuario
+        )
+
+        siguiente = dialog_manager.obtener_mensaje_agitacion()
+        return {
+            "estado": siguiente["estado"],
+            "mensaje": (
+                "Gracias por compartirlo. La concentración es algo que puede verse muy afectado por nuestro estado emocional.\n\n"
+                f"{siguiente['mensaje']}"
+            ),
+            "modo_entrada": siguiente["modo_entrada"],
+            "sugerencias": siguiente.get("sugerencias", [])
+        }, datos_guardados
+
+
+    # --- Preguntar Agitación ---
+    if estado_actual == "preguntar_agitacion":
+        if detectar_ambiguedad(texto_usuario):
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        texto_limpio = limpiar_texto(texto_usuario)
+
+        # Solo mapear sugerencias exactas
+        mapa_respuestas = {
+            "sí, me siento inquieto": 1,
+            "no, estoy tranquilo": 0,
+            "no estoy seguro": None
+        }
+
+        mapa_respuestas_limpio = {limpiar_texto(k): v for k, v in mapa_respuestas.items()}
+        puntuacion = mapa_respuestas_limpio.get(texto_limpio)
+
+        # Si no coincide con sugerencias, usar intención
+        if puntuacion is None:
+            intencion = detectar_intencion(texto_usuario)
+            print(f"[DEBUG] Intención detectada: {intencion}")
+            if intencion == "afirmativo":
+                puntuacion = 1
+            elif intencion == "negativo":
+                puntuacion = 0
+            else:
+                return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        print(f"[DEBUG] Puntuación final asignada: {puntuacion}")
+
+        resultado_emocional = analizar_sentimiento(texto_usuario)
+        emocion = resultado_emocional.get("estado_emocional", "neutral").lower()
+        confianza = resultado_emocional.get("confianza", "0%")
+
+        datos_guardados["puntuacion_agitacion"] = puntuacion
+        datos_guardados["agitacion_texto"] = texto_usuario
+        datos_guardados["emocion_agitacion"] = emocion
+        datos_guardados["confianza_emocion_agitacion"] = confianza
+
+        guardar_interaccion_completa(
+            session_id=session_id,
+            estado=estado_actual,
+            pregunta="¿Has notado que últimamente sientes inquietud o agitación?",
+            respuesta_usuario=texto_usuario,
+            puntuacion=puntuacion
+        )
+
+        if puntuacion == 1:
+            siguiente = dialog_manager.obtener_detalle_agitacion()
+            mensaje = (
+                "Gracias por compartirlo. A veces la inquietud puede ser difícil de explicar pero importante de reconocer.\n\n"
+                f"{siguiente['mensaje']}"
+            )
+        elif puntuacion == 0:
+            siguiente = dialog_manager.obtener_mensaje_esperar_siguiente_pregunta()
+            mensaje = (
+                "Me alegra saber que no has notado inquietud últimamente.\n\n"
+                f"{siguiente['mensaje']}"
+            )
+        else:
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        return {
+            "estado": siguiente["estado"],
+            "mensaje": mensaje,
+            "modo_entrada": siguiente["modo_entrada"],
+            "sugerencias": siguiente.get("sugerencias", [])
+        }, datos_guardados
+
+
+    # --- Detalle Agitación ---
+    if estado_actual == "detalle_agitacion":
+        if detectar_ambiguedad(texto_usuario):
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        resultado_emocional = analizar_sentimiento(texto_usuario)
+        emocion = resultado_emocional.get("estado_emocional", "neutral").lower()
+        confianza = resultado_emocional.get("confianza", "0%")
+
+        datos_guardados["detalle_agitacion"] = texto_usuario
+        datos_guardados["emocion_detalle_agitacion"] = emocion
+        datos_guardados["confianza_emocion_detalle_agitacion"] = confianza
+
+        guardar_interaccion_completa(
+            session_id=session_id,
+            estado=estado_actual,
+            pregunta="¿Cómo describirías esa inquietud que has sentido últimamente?",
+            respuesta_usuario=texto_usuario
+        )
+
+        siguiente = dialog_manager.obtener_mensaje_esperar_siguiente_pregunta()
+        return {
+            "estado": siguiente["estado"],
+            "mensaje": (
+                "Gracias por contármelo. La agitación puede tener un gran impacto en cómo nos sentimos en el día a día.\n\n"
+                f"{siguiente['mensaje']}"
+            ),
+            "modo_entrada": siguiente["modo_entrada"],
+            "sugerencias": siguiente.get("sugerencias", [])
+        }, datos_guardados
 
 
 

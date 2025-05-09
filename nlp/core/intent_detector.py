@@ -15,8 +15,8 @@ EXPRESIONES_AFIRMATIVAS = [
     "vale, sigamos", "estoy de acuerdo", "sigamos por favor", "quiero continuar",
     "sí, me he sentido triste", "sí, me he sentido muy triste", "sí, últimamente me he sentido triste",
     "ya no disfruto", "he dejado de disfrutar", "he perdido interés", "me cuesta disfrutar",
-    "no encuentro placer", "no me interesa lo mismo", "no me apetece nada",
-    "he notado cambios", "he notado que", "como peor", "como diferente", "ha cambiado mi apetito"
+    "no encuentro placer", "no me interesa lo mismo", "no me apetece nada", "como peor", "como diferente", 
+    "ha cambiado mi apetito"
 ]
 
 EXPRESIONES_NEGATIVAS = [
