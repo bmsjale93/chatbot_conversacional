@@ -276,6 +276,41 @@ def obtener_detalle_sueno() -> dict:
         ]
     }
 
+def obtener_mensaje_apetito() -> dict:
+    return {
+        "estado": "preguntar_apetito",
+        "mensaje": (
+            "¿Has notado cambios en tu apetito o en la cantidad de comida que tomas?\n\n"
+            "Puedes responder con sinceridad. Si no estás seguro/a, también puedes decírmelo."
+        ),
+        "modo_entrada": "mixto",
+        "sugerencias": [
+            "Si, he tenido cambios en el apetito",
+            "No he notado cambios",
+            "No estoy seguro"
+        ]
+    }
+
+def obtener_detalle_apetito() -> dict:
+    return {
+        "estado": "detalle_apetito",
+        "mensaje": (
+            "Gracias por contármelo. ¿Podrías explicarme qué cambios has notado en tu apetito o en tu forma de comer?\n\n"
+            "Por ejemplo:\n"
+            "- Tienes más hambre de lo normal\n"
+            "- Tienes menos ganas de comer\n"
+            "- Comes sin tener hambre\n"
+            "- Te saltas comidas con frecuencia"
+        ),
+        "modo_entrada": "mixto",
+        "sugerencias": [
+            "Tengo más hambre de lo normal",
+            "Me cuesta comer",
+            "Como sin hambre",
+            "Me salto comidas"
+        ]
+    }
+
 
 def obtener_mensaje_esperar_siguiente_pregunta() -> dict:
     return {

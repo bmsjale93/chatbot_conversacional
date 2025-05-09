@@ -306,6 +306,45 @@ def generar_respuesta_aclaratoria(estado_actual: str) -> Dict[str, str]:
                 "Duermo más de lo habitual"
             ]
         }
+    
+    if estado_actual == "preguntar_apetito":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "No pasa nada si no estás seguro/a. Me refiero a si has notado algún cambio reciente en tu apetito, como:\n"
+                "- Comer más de lo habitual\n"
+                "- Tener menos hambre\n"
+                "- Perder el interés por la comida\n\n"
+                "¿Dirías que algo de esto te ha ocurrido últimamente?"
+            ),
+            "modo_entrada": "mixto",
+            "sugerencias": [
+                "Como más de lo habitual",
+                "Como menos de lo habitual",
+                "No he notado cambios",
+                "No estoy seguro"
+            ]
+        }
+
+    if estado_actual == "detalle_apetito":
+        return {
+            "estado": estado_actual,
+            "mensaje": (
+                "Gracias por compartirlo. A veces cuesta describir con precisión los cambios en el apetito.\n\n"
+                "Puedes contarme si has notado cosas como:\n"
+                "- Comer mucho más o con más ansiedad\n"
+                "- Perder el apetito por completo\n"
+                "- Comer menos sin darte cuenta\n\n"
+                "¿Cuál de estas situaciones te describe mejor últimamente?"
+            ),
+            "modo_entrada": "mixto",
+            "sugerencias": [
+                "Estoy comiendo más de lo normal",
+                "Tengo menos apetito",
+                "Como sin ganas",
+                "He perdido el interés por la comida"
+            ]
+        }
 
 
     return {

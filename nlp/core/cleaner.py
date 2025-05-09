@@ -18,7 +18,7 @@ def limpiar_texto(texto: Optional[str]) -> str:
     Returns:
         str: Texto limpio y normalizado.
     """
-    if not texto or not isinstance(texto, str):
+    if not isinstance(texto, str) or not texto.strip():
         return ""
 
     texto = texto.lower()
