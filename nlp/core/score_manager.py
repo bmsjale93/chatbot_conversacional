@@ -3,8 +3,7 @@ import os
 import json
 from typing import Optional
 
-# -------------------- Configuración de Redis --------------------
-
+# Configuración de Redis
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 
@@ -15,8 +14,7 @@ try:
     redis_client.ping()
 except redis.exceptions.ConnectionError:
     redis_client = None
-    print("⚠️ Redis no disponible. Puntuaciones no serán almacenadas.")
-
+    print("Redis no disponible. Puntuaciones no serán almacenadas.")
 
 # -------------------- Funciones de cálculo --------------------
 
@@ -62,7 +60,6 @@ def calcular_puntuacion(tipo: str, valor: str) -> int:
 
     return 0
 
-
 # -------------------- Gestión de puntuaciones --------------------
 
 def obtener_puntuaciones(session_id: str) -> dict:
@@ -82,14 +79,12 @@ def asignar_puntuacion(session_id: str, tipo: str, valor: str):
 
     puntuaciones[tipo] = puntos
 
-    # Calcular media si están presentes al menos dos valores
     valores = [
         puntuaciones.get("frecuencia"),
         puntuaciones.get("duracion"),
         puntuaciones.get("intensidad")
     ]
     valores_validos = [v for v in valores if isinstance(v, int)]
-
     puntuaciones["media"] = round(sum(valores_validos) / len(valores_validos), 2) if valores_validos else 0
 
     redis_client.set(key, json.dumps(puntuaciones), ex=3600)

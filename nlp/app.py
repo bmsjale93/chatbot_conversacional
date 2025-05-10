@@ -11,39 +11,37 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Permitir peticiones desde cualquier origen (ideal para conexión desde Gradio o frontend externo)
+# Configuración de CORS
 app.add_middleware(
     CORSMiddleware,
-    # Puedes restringirlo a ["http://localhost:7860"] si lo prefieres
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Montar carpeta para archivos estáticos (incluyendo informes PDF)
+# Montaje de carpeta estática para archivos PDF
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# ------------------ MODELOS ------------------
+# Modelos de entrada/salida
 class MensajeEntrada(BaseModel):
     mensaje_usuario: str
-
 
 class PayloadGestionar(BaseModel):
     session_id: str
     mensaje_usuario: str
-
 
 class RespuestaSalida(BaseModel):
     mensaje: str
     estado: str
     sugerencias: list[str] = []
 
-# ------------------ ENDPOINTS ------------------
+# Endpoints principales
 @app.get("/", tags=["Sistema"])
 async def home():
-    return {"mensaje": "✅ Servicio NLP activo. Usa /gestionar para conversación completa o /analyze para respuesta directa."}
-
+    return {
+        "mensaje": "Servicio NLP activo. Usa /gestionar para conversación completa o /analyze para respuesta directa."
+    }
 
 @app.post("/analyze", response_model=RespuestaSalida, tags=["Análisis emocional"])
 async def analizar(mensaje: MensajeEntrada):
@@ -54,15 +52,12 @@ async def analizar(mensaje: MensajeEntrada):
         sugerencias=resultado.get("sugerencias", [])
     )
 
-
 @app.post("/gestionar", tags=["Conversación emocional"])
 async def gestionar(payload: PayloadGestionar):
     try:
-        respuesta = gestionar_mensaje(
-            payload.session_id, payload.mensaje_usuario)
-        return respuesta
+        return gestionar_mensaje(payload.session_id, payload.mensaje_usuario)
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"❌ Error al procesar el mensaje: {str(e)}"
+            detail=f"Error al procesar el mensaje: {str(e)}"
         )

@@ -15,15 +15,15 @@ from core.empathy_utils import (
     generar_respuesta_empatica,
     detectar_ambiguedad_identidad
 )
-import os
 from core.database import guardar_interaccion_completa, generar_pdf_informe
 from core.cleaner import limpiar_texto
 from utils.extract_name import extraer_nombre
+import os
 import re
 
 def detectar_emocion(texto_usuario: str) -> str:
     """
-    Detecta la emoción principal del texto, utilizando caché si está disponible.
+    Detecta la emoción principal del texto, usando caché si está disponible.
     """
     cached = obtener_cache(texto_usuario)
     if cached and "estado_emocional" in cached:
@@ -33,9 +33,11 @@ def detectar_emocion(texto_usuario: str) -> str:
     guardar_cache(texto_usuario, resultado)
     return resultado.get("estado_emocional", "neutral")
 
-# Constantes de estado
+# ---------------- Constantes ----------------
 FIN = "fin"
 ERROR = "error"
+
+# ---------------- Mapeo de estados a funciones ----------------
 ESTADOS_DIALOG_MANAGER = {
     "presentacion": dialog_manager.obtener_mensaje_presentacion,
     "consentimiento": dialog_manager.obtener_mensaje_presentacion,
@@ -75,28 +77,23 @@ ESTADOS_DIALOG_MANAGER = {
 }
 
 
-def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, datos_guardados: dict) -> Tuple[dict, dict]:
 
-    # --- Validación global de mensaje vacío ---
+def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, datos_guardados: dict) -> Tuple[dict, dict]:
+    # Validación de mensaje vacío
     if not texto_usuario or not texto_usuario.strip():
         respuesta_base_fn = ESTADOS_DIALOG_MANAGER.get(estado_actual)
-
         if respuesta_base_fn:
-            # Comprobar si la función acepta argumentos
             try:
                 base = respuesta_base_fn(datos_guardados)
             except TypeError:
                 base = respuesta_base_fn()
             return {
                 "estado": estado_actual,
-                "mensaje": (
-                    "Por favor, selecciona una opción o escribe algo antes de continuar."
-                ),
+                "mensaje": "Por favor, selecciona una opción o escribe algo antes de continuar.",
                 "modo_entrada": base.get("modo_entrada", "texto_libre"),
                 "sugerencias": base.get("sugerencias", [])
             }, datos_guardados
 
-        # Fallback genérico si no se encuentra el estado
         return {
             "estado": estado_actual,
             "mensaje": "Por favor, escribe algo antes de continuar.",
@@ -104,19 +101,17 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             "sugerencias": []
         }, datos_guardados
 
-    # --- Fase de presentación ---
+    # Fase de presentación
     if estado_actual == "presentacion":
         respuesta = dialog_manager.obtener_mensaje_presentacion()
         respuesta["estado"] = "consentimiento"
         return respuesta, datos_guardados
 
-    # --- Consentimiento ---
+    # Fase de consentimiento
     if estado_actual == "consentimiento":
-        # 1. Detectar ambigüedad explícita
         if detectar_ambiguedad(texto_usuario):
             return generar_respuesta_aclaratoria("consentimiento"), datos_guardados
 
-        # 2. Rechazo explícito por coincidencia directa
         respuestas_negativas_explicitamente = [
             "no", "no quiero continuar", "no, prefiero no continuar",
             "prefiero no continuar", "no deseo continuar"
@@ -125,20 +120,16 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             respuesta = dialog_manager.obtener_mensaje_consentimiento_rechazado()
             return respuesta, datos_guardados
 
-        # 3. Clasificador de intención (afirmativo, negativo, desconocido)
         intencion = detectar_intencion(texto_usuario)
 
         if intencion == "afirmativo":
-            # Guardar consentimiento explícito
             datos_guardados["consentimiento_aceptado"] = True
-
             guardar_interaccion_completa(
                 session_id=session_id,
                 estado=estado_actual,
                 pregunta="¿Estás de acuerdo en continuar con esta evaluación emocional?",
                 respuesta_usuario=texto_usuario
             )
-
             respuesta = dialog_manager.obtener_mensaje_nombre()
             respuesta["estado"] = "preguntar_nombre"
 
@@ -151,7 +142,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
 
         return respuesta, datos_guardados
 
-    # --- Preguntar nombre ---
+    # Fase de nombre
     if estado_actual == "preguntar_nombre":
         if detectar_ambiguedad(texto_usuario):
             return generar_respuesta_aclaratoria(estado_actual), datos_guardados

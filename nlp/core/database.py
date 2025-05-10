@@ -10,7 +10,6 @@ from core.security import anonimizar_texto
 from core.emotion_model import analizar_sentimiento
 from core.score_manager import obtener_puntuaciones
 
-# Configuración del logger
 logger = logging.getLogger(__name__)
 
 # Conexión a MongoDB
@@ -19,7 +18,6 @@ cliente = MongoClient(MONGO_URL)
 db = cliente.get_database("chatbot")
 conversaciones = db.get_collection("historial")
 
-# ------------------------ FUNCIONES PRINCIPALES ------------------------
 
 def guardar_interaccion(
     texto: str,
@@ -35,14 +33,14 @@ def guardar_interaccion(
         "emocion": emocion.lower(),
         "timestamp": datetime.now(timezone.utc)
     }
-
     if guardar_texto_original:
         doc["mensaje_usuario"] = texto
 
     try:
         conversaciones.insert_one(doc)
     except PyMongoError as e:
-        logger.error(f"❌ Error guardando interacción (simple): {e}")
+        logger.error(f"Error guardando interacción simple: {e}")
+
 
 def guardar_interaccion_completa(
     session_id: str,
@@ -86,7 +84,8 @@ def guardar_interaccion_completa(
     try:
         conversaciones.insert_one(doc)
     except PyMongoError as e:
-        logger.error(f"❌ Error guardando interacción completa: {e}")
+        logger.error(f"Error guardando interacción completa: {e}")
+
 
 def obtener_historial_conversacion(session_id: str) -> list:
     from pymongo import ASCENDING
@@ -99,6 +98,7 @@ def obtener_historial_conversacion(session_id: str) -> list:
         if "respuesta_usuario" in doc:
             historial.append({"role": "user", "content": doc["respuesta_usuario"]})
     return historial
+
 
 def generar_pdf_informe(session_id: str, ruta_salida: str = "informe_emocional.pdf") -> Optional[str]:
     try:
@@ -138,13 +138,18 @@ def generar_pdf_informe(session_id: str, ruta_salida: str = "informe_emocional.p
             fecha = reg.get("timestamp", "").strftime("%Y-%m-%d %H:%M") if reg.get("timestamp") else "N/A"
 
             pdf.chapter_title(idx, pregunta)
-            cuerpo = f"Respuesta: {respuesta}\nEmoción detectada: {emocion} ({confianza})\nPuntuación: {puntuacion}\nFecha: {fecha}"
+            cuerpo = (
+                f"Respuesta: {respuesta}\n"
+                f"Emoción detectada: {emocion} ({confianza})\n"
+                f"Puntuación: {puntuacion}\n"
+                f"Fecha: {fecha}"
+            )
             pdf.chapter_body(cuerpo)
 
         pdf.output(ruta_salida)
-        logger.info(f"📄 Informe PDF generado correctamente: {ruta_salida}")
+        logger.info(f"Informe PDF generado correctamente: {ruta_salida}")
         return ruta_salida
 
     except Exception as e:
-        logger.error(f"❌ Error generando PDF: {e}")
+        logger.error(f"Error generando PDF: {e}")
         return None

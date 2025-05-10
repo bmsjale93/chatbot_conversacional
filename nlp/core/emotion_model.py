@@ -1,18 +1,17 @@
-# nlp/core/emotion_model.py
 from typing import Dict
 import unicodedata
 import re
 import difflib
 from pysentimiento import create_analyzer
 
-# Emociones esperadas por el sistema (en español)
+# Emociones compatibles con el sistema
 EMOCIONES_VALIDAS = [
     "alegría", "amor", "enojo", "miedo", "tristeza", "sorpresa", "culpa",
     "vergüenza", "frustración", "ansiedad", "agotamiento", "soledad",
     "esperanza", "indiferencia", "preocupación", "confusión", "neutral", "anhedonia"
 ]
 
-# Traducción desde las emociones detectadas por pysentimiento a las del sistema
+# Traducción desde emociones detectadas por pysentimiento
 TRADUCCION_PYSENTIMIENTO = {
     "joy": "alegría",
     "sadness": "tristeza",
@@ -23,20 +22,20 @@ TRADUCCION_PYSENTIMIENTO = {
     "others": "neutral"
 }
 
-# Normalización de emociones válidas para comparación flexible
+# Lista normalizada para comparación
 EMOCIONES_VALIDAS_NORMALIZADAS = [
     unicodedata.normalize("NFKD", e).encode("ascii", "ignore").decode("utf-8").lower()
     for e in EMOCIONES_VALIDAS
 ]
 
-# Inicialización del analizador
+# Carga del modelo de emociones
 try:
-    print("⏳ Cargando modelo pysentimiento (emotion, lang='es')...")
+    print("Cargando modelo pysentimiento (emotion, lang='es')...")
     modelo = create_analyzer(task="emotion", lang="es")
-    print("✅ Modelo cargado correctamente.")
+    print("Modelo cargado correctamente.")
 except Exception as e:
     import traceback
-    print("❌ Error detallado al cargar el modelo:")
+    print("Error al cargar el modelo:")
     traceback.print_exc()
     modelo = None
 
@@ -44,8 +43,7 @@ except Exception as e:
 def limpiar_texto_emocion(texto: str) -> str:
     texto = texto.lower().strip()
     texto = re.sub(r"[^\w\s]", "", texto)
-    texto = unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode("utf-8")
-    return texto
+    return unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode("utf-8")
 
 
 def fallback_por_similitud(emocion_limpia: str) -> str:

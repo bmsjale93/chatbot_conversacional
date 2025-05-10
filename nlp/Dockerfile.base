@@ -6,7 +6,7 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Dependencias del sistema
+# Dependencias del sistema necesarias para compilación y conectividad
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libffi-dev \
@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Instalación de librerías necesarias para NLP y PDF
+# Instalación de librerías para análisis de lenguaje y generación de PDF
 RUN pip install --upgrade pip && pip install --no-cache-dir \
     spacy==3.7.2 \
     transformers==4.39.1 \
@@ -29,15 +29,15 @@ RUN pip install --upgrade pip && pip install --no-cache-dir \
     sentence-transformers==2.7.0 \
     fpdf==1.7.2
 
-# Modelo de spaCy en español
+# Descarga de modelo spaCy en español
 RUN python -m spacy download es_core_news_sm
 
-# Descarga anticipada del modelo de intención
+# Descarga anticipada del modelo de intención para reducir latencia inicial
 RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')"
 
-# Carpetas de caché y directorio estático
+# Directorios de caché y para informes PDF
 RUN mkdir -p /root/.cache/huggingface /root/.cache/spacy \
     && mkdir -p /app/static/informes
 
-# Comando por defecto (puedes sobrescribir en docker-compose)
+# Comando por defecto
 CMD ["/bin/bash"]

@@ -4,7 +4,6 @@ from core.processor import preprocesar_texto
 import re
 
 # -------------------- Ambigüedad general --------------------
-
 RESPUESTAS_AMBIGUAS = {
     "no sé", "no lo sé", "no lo se", "no estoy seguro", "no estoy segura", "quizás", "tal vez",
     "puede ser", "no entiendo", "no sé qué decir", "npi", "ni idea", "no sabría decir",

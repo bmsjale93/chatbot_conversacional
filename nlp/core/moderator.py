@@ -1,39 +1,27 @@
 import os
 from typing import Set
 
-# Definimos la ruta al archivo de palabras prohibidas
-RUTA_LISTA: str = os.path.join(os.path.dirname(
-    __file__), "palabras_prohibidas.txt")
-
+# Ruta al archivo que contiene las palabras prohibidas
+RUTA_LISTA: str = os.path.join(os.path.dirname(__file__), "palabras_prohibidas.txt")
 
 def cargar_palabras_prohibidas() -> Set[str]:
-    """
-    Carga las palabras ofensivas o peligrosas desde un archivo de texto,
-    devolviendo un conjunto de palabras en minúsculas.
-    """
+    """Carga palabras ofensivas o peligrosas desde archivo de texto."""
     try:
         with open(RUTA_LISTA, "r", encoding="utf-8") as f:
-            palabras = {line.strip().casefold() for line in f if line.strip()}
-        return palabras
+            return {line.strip().casefold() for line in f if line.strip()}
     except FileNotFoundError:
-        print(
-            f"⚠️ Archivo de palabras prohibidas no encontrado en {RUTA_LISTA}. Se cargará lista vacía.")
+        print(f"Archivo de palabras prohibidas no encontrado en {RUTA_LISTA}. Se cargará lista vacía.")
         return set()
     except Exception as e:
-        print(f"⚠️ Error cargando palabras prohibidas: {str(e)}")
+        print(f"Error cargando palabras prohibidas: {str(e)}")
         return set()
 
-
-# Cargamos las palabras prohibidas una sola vez al iniciar
+# Lista cargada una sola vez al inicio
 PALABRAS_PROHIBIDAS: Set[str] = cargar_palabras_prohibidas()
 
-
 def contiene_lenguaje_inapropiado(texto: str) -> bool:
-    """
-    Verifica si el texto contiene alguna palabra ofensiva de la lista cargada.
-    """
+    """Verifica si el texto contiene alguna palabra prohibida."""
     if not texto:
         return False
-
     texto_limpio = texto.strip().casefold()
     return any(palabra in texto_limpio for palabra in PALABRAS_PROHIBIDAS)

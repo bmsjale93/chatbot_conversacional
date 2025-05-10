@@ -4,7 +4,7 @@ import json
 import os
 from typing import Optional, Any
 
-# -------------------- Configuración --------------------
+# -------- Configuración de conexión con Redis --------
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 
@@ -17,23 +17,19 @@ try:
     cache_client.ping()
 except redis.exceptions.ConnectionError:
     cache_client = None
-    print("⚠️ Aviso: No se pudo conectar a Redis. La caché estará deshabilitada.")
+    print("Aviso: No se pudo conectar a Redis. La caché estará deshabilitada.")
 
-# -------------------- Utilidades --------------------
+# -------- Utilidades --------
 def generar_clave_cache(texto: str) -> str:
-    """Genera un hash SHA-256 del texto para usar como clave única en la caché."""
+    """
+    Genera una clave única para la caché a partir del texto original usando SHA-256.
+    """
     return hashlib.sha256(texto.encode("utf-8")).hexdigest()
 
-# -------------------- Operaciones de Caché --------------------
+# -------- Funciones de lectura y escritura en caché --------
 def obtener_cache(texto: str) -> Optional[dict[str, Any]]:
     """
-    Recupera una respuesta previamente almacenada en caché para un texto dado.
-
-    Args:
-        texto (str): Texto original del mensaje.
-
-    Returns:
-        dict o None: La respuesta almacenada, o None si no existe o hay error.
+    Recupera una respuesta almacenada en la caché si existe.
     """
     if not cache_client:
         return None
@@ -42,18 +38,12 @@ def obtener_cache(texto: str) -> Optional[dict[str, Any]]:
         resultado = cache_client.get(clave)
         return json.loads(resultado) if resultado else None
     except Exception as e:
-        print(f"⚠️ Error al obtener desde caché: {e}")
+        print(f"Error al obtener desde caché: {e}")
         return None
-
 
 def guardar_cache(texto: str, resultado: dict, expiracion_segundos: int = 3600) -> None:
     """
-    Almacena una respuesta en la caché, asociada al texto original.
-
-    Args:
-        texto (str): Texto original del mensaje.
-        resultado (dict): Respuesta a guardar.
-        expiracion_segundos (int): Tiempo de expiración en segundos (por defecto 1 hora).
+    Guarda un resultado en caché para el texto dado, con una expiración opcional.
     """
     if not cache_client:
         return
@@ -61,4 +51,4 @@ def guardar_cache(texto: str, resultado: dict, expiracion_segundos: int = 3600) 
         clave = generar_clave_cache(texto)
         cache_client.set(clave, json.dumps(resultado), ex=expiracion_segundos)
     except Exception as e:
-        print(f"⚠️ Error al guardar en caché: {e}")
+        print(f"Error al guardar en caché: {e}")
