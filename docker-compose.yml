@@ -10,7 +10,7 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
-      - informes_compartidos:/app/static/informes  # <--- NUEVO
+      - informes_compartidos:/app/static/informes  # Compartir PDFs con el servicio NLP
     depends_on:
       - db
       - nlp
@@ -29,7 +29,7 @@ services:
       - ./nlp:/app
       - huggingface_cache:/root/.cache/huggingface
       - spacy_cache:/root/.cache/spacy
-      - informes_compartidos:/app/static/informes
+      - informes_compartidos:/app/static/informes  # Compartido con backend para acceso a PDFs
     env_file:
       - ./nlp/.env
     depends_on:
@@ -72,4 +72,4 @@ volumes:
   mongodb_data:
   huggingface_cache:
   spacy_cache:
-  informes_compartidos:
+  informes_compartidos:  # Volumen persistente y compartido para informes PDF
