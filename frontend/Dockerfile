@@ -1,27 +1,24 @@
-# Imagen ligera con Python 3.10
+# Imagen base ligera con Python 3.10
 FROM python:3.10-slim
 
-# Establecer el directorio de trabajo
+# Establece el directorio de trabajo dentro del contenedor
 WORKDIR /app
 
-# Instalar dependencias del sistema necesarias (si Gradio usa audio o vídeo puede requerir ffmpeg y curl)
+# Instala dependencias del sistema necesarias para Gradio (audio, video, red)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg curl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Evitar archivos pyc y mantener logs visibles
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+# Configuración del entorno Python para evitar archivos pyc y mostrar logs en tiempo real
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-# Copiamos el archivo de dependencias
+# Copia el archivo de requerimientos y los instala sin usar caché
 COPY requirements.txt .
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
-# Instalamos dependencias Python
-RUN pip install --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
-
-# Copiamos el resto del código fuente
+# Copia el resto del código de la aplicación al contenedor
 COPY . .
 
-# Comando para lanzar la aplicación Gradio
+# Comando de arranque: lanza la aplicación Gradio
 CMD ["python", "app_gradio.py"]

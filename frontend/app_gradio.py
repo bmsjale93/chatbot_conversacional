@@ -8,7 +8,7 @@ BACKEND_URL = os.getenv("BACKEND_URL", "http://backend:8000/api/chat")
 HISTORIAL_URL = os.getenv("HISTORIAL_URL", "http://backend:8000/api/chat/historial")
 conversacion_activa = True
 
-# ------------------- Bienvenida -------------------
+# ------------------- Mensaje de bienvenida -------------------
 def crear_mensaje_bienvenida():
     return {
         "role": "assistant",
@@ -19,7 +19,7 @@ def crear_mensaje_bienvenida():
         )
     }
 
-# ------------------- Enviar mensaje -------------------
+# ------------------- Envío de mensaje al backend -------------------
 def enviar_mensaje(mensaje_usuario, historial, session_id):
     global conversacion_activa
 
@@ -38,14 +38,12 @@ def enviar_mensaje(mensaje_usuario, historial, session_id):
         )
         response.raise_for_status()
         data = response.json()
-        print("[DEBUG] Respuesta del backend:", data)
 
         mensaje_asistente = data.get("mensaje", "Respuesta no disponible en este momento.")
         estado = data.get("estado", "")
         sugerencias = data.get("sugerencias", [])
         modo_entrada = data.get("modo_entrada", "texto_libre")
 
-        # Registrar siempre la entrada del usuario (aunque esté vacía)
         historial.append({"role": "user", "content": mensaje_mostrado})
         historial.append({"role": "assistant", "content": mensaje_asistente})
 
@@ -54,10 +52,6 @@ def enviar_mensaje(mensaje_usuario, historial, session_id):
 
         mostrar_texto = modo_entrada in ["texto_libre", "mixto"]
         mostrar_dropdown = modo_entrada in ["mixto", "sugerencias"] and bool(sugerencias)
-
-        print("[DEBUG] modo_entrada:", modo_entrada)
-        print("[DEBUG] sugerencias:", sugerencias)
-        print("[DEBUG] mostrar_dropdown:", mostrar_dropdown)
 
         return (
             historial,
@@ -79,8 +73,7 @@ def enviar_mensaje(mensaje_usuario, historial, session_id):
         historial.append({"role": "system", "content": f"Ocurrió un error inesperado: {e}"})
         return historial, session_id, gr.update(visible=True), gr.update(visible=False)
 
-
-# ------------------- Cargar historial -------------------
+# ------------------- Cargar historial desde el backend -------------------
 def cargar_historial(session_id):
     if not session_id or session_id == "null":
         session_id = str(uuid.uuid4())
@@ -96,7 +89,7 @@ def cargar_historial(session_id):
         return historial_guardado, session_id, gr.update(visible=True), gr.update(visible=False)
 
     except Exception as e:
-        print(f"[⚠️ ERROR AL CARGAR HISTORIAL] {e}")
+        print(f"[ERROR AL CARGAR HISTORIAL] {e}")
         return [crear_mensaje_bienvenida()], session_id, gr.update(visible=True), gr.update(visible=False)
 
 # ------------------- Reiniciar conversación -------------------
@@ -104,7 +97,6 @@ def reiniciar_conversacion():
     global conversacion_activa
     conversacion_activa = True
     nuevo_id = str(uuid.uuid4())
-
     return [crear_mensaje_bienvenida()], nuevo_id, gr.update(visible=True), gr.update(visible=False)
 
 # ------------------- Interfaz Gradio -------------------
@@ -116,6 +108,8 @@ with gr.Blocks(theme=gr.themes.Soft()) as interfaz:
     ---
     Este asistente conversacional está diseñado para ayudarte a reflexionar sobre tu estado emocional.  
     Puedes detener la conversación en cualquier momento.
+
+    **Importante:** En preguntas que requieran una respuesta afirmativa o negativa, responde claramente con **"sí"** o **"no"** para ayudar a que el asistente comprenda mejor tus respuestas.
     """)
 
     with gr.Row(equal_height=True):
@@ -140,6 +134,13 @@ with gr.Blocks(theme=gr.themes.Soft()) as interfaz:
 
             boton_enviar = gr.Button("Enviar mensaje", variant="primary")
             boton_reiniciar = gr.Button("Reiniciar conversación", variant="secondary")
+
+            gr.Markdown("""
+            **Instrucciones de uso:**
+            - Escribe tu mensaje en el campo de texto y pulsa **Enviar mensaje**.
+            - Si aparecen sugerencias, puedes seleccionarlas del desplegable.
+            - Para reiniciar la conversación, pulsa **Reiniciar conversación**.
+            """)
 
     # ------------------- Eventos -------------------
     mensaje_input.submit(
@@ -189,6 +190,6 @@ with gr.Blocks(theme=gr.themes.Soft()) as interfaz:
         """
     )
 
-# ------------------- Lanzar -------------------
+# ------------------- Ejecutar interfaz -------------------
 if __name__ == "__main__":
     interfaz.launch(server_name="0.0.0.0", server_port=7860, share=False)
