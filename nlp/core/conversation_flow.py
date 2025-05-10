@@ -15,7 +15,8 @@ from core.empathy_utils import (
     generar_respuesta_empatica,
     detectar_ambiguedad_identidad
 )
-from core.database import guardar_interaccion_completa
+import os
+from core.database import guardar_interaccion_completa, generar_pdf_informe
 from core.cleaner import limpiar_texto
 from utils.extract_name import extraer_nombre
 import re
@@ -1465,10 +1466,56 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         nombre = datos_guardados.get("nombre_usuario", "amigo/a")
 
         # Transición al cierre con nombre personalizado
+        siguiente = dialog_manager.obtener_mensaje_percepcion_empatia()
+        return {
+            "estado": siguiente["estado"],
+            "mensaje": (
+                "Gracias por compartirlo. Tener identificadas estas estrategias puede ayudarte a gestionar mejor los momentos difíciles.\n\n"
+                f"{siguiente['mensaje']}"
+            ),
+            "modo_entrada": siguiente["modo_entrada"],
+            "sugerencias": siguiente.get("sugerencias", [])
+        }, datos_guardados
+
+
+    # --- Preguntar percepción de empatía del chatbot ---
+    if estado_actual == "preguntar_percepcion_empatia":
+        texto_limpio = limpiar_texto(texto_usuario)
+
+        if not texto_limpio.isdigit() or int(texto_limpio) not in range(0, 11):
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        puntuacion_empatia = int(texto_limpio)
+        datos_guardados["puntuacion_empatia"] = puntuacion_empatia
+
+        guardar_interaccion_completa(
+            session_id=session_id,
+            estado=estado_actual,
+            pregunta="¿Cómo calificarías la empatía del chatbot (0 a 10)?",
+            respuesta_usuario=texto_usuario,
+            puntuacion=puntuacion_empatia
+        )
+
+        # 1. Generar PDF del informe
+        nombre_pdf = f"{session_id}.pdf"
+        ruta_pdf = os.path.join("static", "informes", nombre_pdf)
+        os.makedirs(os.path.dirname(ruta_pdf), exist_ok=True)
+        generar_pdf_informe(session_id, ruta_pdf)
+
+        # 2. Construir URL pública del PDF
+        url_pdf = f"http://localhost:8000/static/informes/{nombre_pdf}"
+
+        # 3. Mensaje de cierre con enlace al informe
+        nombre = datos_guardados.get("nombre_usuario", "usuario")
         cierre = dialog_manager.obtener_mensaje_cierre(nombre)
+        mensaje_final = (
+            f"{cierre['mensaje']}\n\n"
+            f"Puedes descargar tu informe desde el siguiente enlace:\n{url_pdf}"
+        )
+
         return {
             "estado": cierre["estado"],
-            "mensaje": cierre["mensaje"],
+            "mensaje": mensaje_final,
             "modo_entrada": cierre["modo_entrada"],
             "sugerencias": cierre.get("sugerencias", [])
         }, datos_guardados

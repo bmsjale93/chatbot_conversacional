@@ -10,6 +10,7 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
+      - informes_compartidos:/app/static/informes  # <--- NUEVO
     depends_on:
       - db
       - nlp
@@ -28,6 +29,7 @@ services:
       - ./nlp:/app
       - huggingface_cache:/root/.cache/huggingface
       - spacy_cache:/root/.cache/spacy
+      - informes_compartidos:/app/static/informes
     env_file:
       - ./nlp/.env
     depends_on:
@@ -70,3 +72,4 @@ volumes:
   mongodb_data:
   huggingface_cache:
   spacy_cache:
+  informes_compartidos:

@@ -510,6 +510,20 @@ def obtener_mensaje_cierre(nombre_usuario: str) -> dict:
         "sugerencias": []
     }
 
+def obtener_mensaje_percepcion_empatia() -> dict:
+    return {
+        "estado": "preguntar_percepcion_empatia",
+        "mensaje": (
+            "Antes de finalizar, me gustaría preguntarte cómo te has sentido con esta evaluación.\n\n"
+            "En una escala del 0 al 10, donde:\n"
+            "- 0 significa que el chatbot no fue nada empático\n"
+            "- 10 significa que fue completamente empático\n\n"
+            "¿Cómo calificarías la empatía del chatbot?"
+        ),
+        "modo_entrada": "sugerencias",
+        "sugerencias": [str(i) for i in range(0, 11)]
+    }
+
 
 def obtener_mensaje_esperar_siguiente_pregunta() -> dict:
     return {

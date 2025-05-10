@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from core.response_generator import generar_respuesta
 from core.conversation_controller import gestionar_mensaje
@@ -19,6 +20,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Montar carpeta para archivos estáticos (incluyendo informes PDF)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # ------------------ MODELOS ------------------
 class MensajeEntrada(BaseModel):
