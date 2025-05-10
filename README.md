@@ -13,227 +13,163 @@ Todo el sistema se encuentra **contenedorizado con Docker** para facilitar su de
 - **Anonimización y almacenamiento seguro:** para cumplir con buenas prácticas de privacidad y seguridad de datos.
 - **Arquitectura de microservicios:** backend y NLP funcionando de forma independiente pero conectados.
 
-## Tecnologías y herramientas utilizadas:
+## Tiempo para Levantar Contenedores:
 
-| Tecnología         | Propósito                                           |
-|:-------------------|:-----------------------------------------------------|
-| **FastAPI**         | API REST backend, rápida y moderna                   |
-| **Docker & Docker Compose** | Contenerización y orquestación de servicios |
-| **MongoDB**         | Base de datos NoSQL para almacenar interacciones     |
-| **Redis**           | Cache de respuestas para optimizar latencia          |
-| **Transformers (Hugging Face)** | Modelos NLP para análisis de sentimientos |
-| **PyMongo**         | Conexión eficiente con MongoDB desde Python          |
-| **pytest / scripts de test** | Pruebas unitarias para garantizar calidad    |
+- **15-20 minutos**
 
+## Tecnologías utilizadas en el Proyecto
+
+| Tecnología                        | Propósito                                                                 |
+|:----------------------------------|:--------------------------------------------------------------------------|
+| **FastAPI**                       | Backend para API REST, altamente eficiente y asíncrono                    |
+| **Gradio**                        | Frontend interactivo para el usuario con interfaz conversacional          |
+| **Docker & Docker Compose**       | Contenerización completa y orquestación de servicios                      |
+| **MongoDB**                       | Base de datos NoSQL para registrar historial de conversación y evaluaciones |
+| **Redis**                         | Almacenamiento en caché para respuestas y estados de conversación         |
+| **Transformers + PySentimiento** | Análisis emocional usando modelos entrenados en español                   |
+| **spaCy**                         | Procesamiento lingüístico para extracción y limpieza de texto             |
+| **Sentence Transformers**         | Detección de intención mediante similitud semántica                       |
+| **FPDF**                          | Generación automática de informes emocionales en PDF                      |
+| **pytest + scripts**              | Pruebas unitarias y de integración para garantizar la robustez del sistema |
+
+---
 
 ## ¿Qué incluye este proyecto?
 
-- **Microservicio NLP**: procesa mensajes, analiza emociones, modera y responde.
-- **Microservicio Backend**: recibe mensajes del frontend, consulta al NLP y devuelve la respuesta.
-- **Sistema de cache Redis**: para acelerar respuestas de mensajes repetidos.
-- **Base de datos MongoDB**: almacenamiento de las conversaciones de forma anonimizada.
-- **Sistema de pruebas automáticas**: verificación de cada componente del sistema.
-- **Despliegue automático**: mediante Docker Compose, listo para entornos de desarrollo o producción.
+- **Frontend Gradio**: interfaz visual con historial, sugerencias y reinicio de conversación.
+- **Microservicio NLP**: gestiona flujo conversacional, analiza emociones, modera lenguaje e imprime informes PDF.
+- **Microservicio Backend**: puente entre frontend y NLP; controla sesiones y persistencia.
+- **Análisis emocional en español**: clasificación empática basada en sentimientos reconocibles.
+- **Gestión de intención y ambigüedad**: comprensión de respuestas afirmativas, negativas y neutras.
+- **Almacenamiento optimizado**: MongoDB para historial completo, Redis para sesiones, emociones y puntuaciones.
+- **Evaluación emocional clínica**: basada en criterios similares al BDI-II con puntuaciones, intensidad y resumen.
+- **Generación de PDF descargable**: informe emocional completo por sesión, accesible desde cualquier interfaz.
+- **Despliegue con Docker Compose**: configurado para levantar todo el sistema con un único comando.
 
 ---
 
 # Puesta en marcha de los servicios y validación del sistema
 
-## 1. Construir la Imagen Base NLP
+## 1. Levantar todos los servicios
 
-Primero, creamos la imagen optimizada que utilizará `nlp_service`:
+Para construir la imagen base del NLP y lanzar todos los contenedores correctamente configurados, simplemente ejecuta desde la raíz del proyecto:
 
+```bash
+./reset_and_run.sh
 ```
-docker build -t nlp_base_image -f nlp/Dockerfile.base nlp/
+
+Este script realiza automáticamente los siguientes pasos:
+
+- Detiene y elimina todos los contenedores existentes.
+- Elimina las imágenes antiguas para forzar una reconstrucción limpia.
+- Construye la imagen base nlp-base desde nlp/Dockerfile.base.
+- Levanta todos los servicios definidos en docker-compose.yml, incluyendo:
+  - Backend (FastAPI)
+  - Servicio NLP (análisis emocional)
+  - Frontend (Gradio)
+  - MongoDB
+  - Redis
+
+**Asegúrate de que el script tenga permisos de ejecución.** Puedes asignarlos con:
+```bash
+chmod +x reset_and_run.sh
 ```
-Esto instalará las librerías pesadas de NLP solo una vez.
 
-Con la imagen base lista, levantamos todo el entorno:
-```
-docker-compose up -d --build
-```
-Este comando construye y levanta: backend, nlp_service, MongoDB y Redis.
-
-
-
-## 2. Comprobar que los Contenedores están funcionando
-
-Listamos los contenedores activos:
-```
+## 2. Comprobar que los contenedores están funcionando
+Puedes verificar que todos los contenedores estén activos con:
+```bash
 docker ps
 ```
-Deberías ver algo similar:
+Deberías ver una salida similar a esta:
 
-| Container        | Status | Ports                       |
-|------------------|--------|------------------------------|
-| backend_chatbot  | Up     | 8000/tcp → 0.0.0.0:8000      |
-| nlp_service      | Up     | 8001/tcp → 0.0.0.0:8001      |
-| mongodb          | Up     | 27017/tcp                    |
-| redis_cache      | Up     | 6379/tcp                     |
+| Contenedor        | Estado | Puertos                  |
+|-------------------|--------|---------------------------|
+| backend_chatbot   | Up     | 8000 → 0.0.0.0:8000       |
+| nlp_service       | Up     | 8001 → 0.0.0.0:8001       |
+| frontend_gradio   | Up     | 7860 → 0.0.0.0:7860       |
+| mongodb           | Up     | 27017/tcp                 |
+| redis_cache       | Up     | 6379/tcp                  |
 
 
-## 3. Ejecutar los Test Automáticos
+## 3. Limpiar la base de datos
 
-### 1. Acceder al Contenedor del Servicio NLP
-Entramos a la carpeta **nlp/**:
+Si deseas eliminar todas las conversaciones y reiniciar el sistema desde cero, ejecuta el siguiente comando desde la raíz del proyecto:
+```bash
+python limpiar_base.py
 ```
-cd nlp
-```
+Este script conecta con MongoDB y elimina todos los documentos de todas las colecciones dentro de la base de datos chatbot.
 
-### 2. Lanzar todos los Tests de la carpeta tests/
-Dentro de la carpeta lanzamos:
-```
-bash run_tests.sh
-```
-Esto ejecutará uno por uno todos los scripts de prueba:
+## 4. Variables de entorno necesarias
 
-* Test de cache Redis
-* Test de limpieza de texto
-* Test de procesamiento NLP
-* Test de modelo de sentimiento
-* Test de almacenamiento en MongoDB
-* Test de anonimización de datos
+Asegúrate de que cada servicio tenga configurado su archivo `.env` correspondiente:
 
-Si todo va bien, verás un resumen final de tests pasados correctamente.
+```env
+# backend/.env
+DATABASE_URL=mongodb://mongodb:27017/chatbot
+SECRET_KEY=supersecreta
 
-## 4. Realizar una Prueba Manual Rápida (Modo Consola)
-
-### 1. Ejecutar Test Manual de Procesamiento de Texto
-
-Dentro del contenedor nlp_service:
-```
-python -m tests.test_run
-```
-Esto comprobará que la función de preprocesamiento funciona correctamente.
-
-### 2. Enviar un Mensaje de Prueba al API Backend
-
-Desde tu máquina local, puedes usar curl para hacer una llamada directa:
-```
-curl -X POST "http://localhost:8000/chat" \
-     -H "Content-Type: application/json" \
-     -d '{"mensaje_usuario":"Hoy me siento muy cansado y sin energía."}'
-```
-Si todo está configurado correctamente, recibirás una respuesta JSON parecida a:
-
-```
-{
-  "estado_emocional": "negativo",
-  "respuesta": "Parece que estás pasando por un momento difícil. Estoy aquí para escucharte. ¿Te gustaría contarme más?"
-}
-```
-
-## 5. Comandos Útiles de Administración
-
-### Detener todos los Contenedores
-```
-docker-compose down
-```
-### Reconstruir Contenedores si hay Cambios
-```
-docker-compose up -d --build
+# nlp/.env
+DATABASE_URL=mongodb://mongodb:27017/chatbot
+REDIS_HOST=redis
 ```
 
 ---
 
-# Estructura de Archivos del Backend
+# Endpoints disponibles
 
-Este proyecto está dividido en dos grandes servicios: **backend/** y **nlp/**, cada uno organizado de manera modular para facilitar el mantenimiento, la escalabilidad y las buenas prácticas en **FastAPI** y **procesamiento NLP**.
+### Backend API (`http://localhost:8000`)
 
-## Backend
-Este directorio contiene el microservicio Backend API que expone los endpoints principales para el cliente (frontend o usuarios externos).
-```
-backend/
-│── app/
-│   ├── main.py             # Archivo principal que inicializa FastAPI y monta las rutas.
-│   ├── routes/
-│   │   ├── __init__.py      # Permite importar el módulo como paquete.
-│   │   ├── chatbot.py       # Define la ruta POST /chat que conecta con el servicio NLP.
-│   ├── models/
-│   │   ├── __init__.py
-│   │   ├── message.py       # Modelo Pydantic para validar el mensaje de entrada del usuario.
-│   ├── services/
-│   │   ├── __init__.py
-│   │   ├── nlp_service.py   # Funciones para comunicarse de manera asíncrona con el servicio NLP (vía HTTP).
-│   ├── config.py            # Carga de variables de entorno (.env) y configuración general del proyecto.
-│── .env                     # Variables sensibles de entorno (no subidas a repositorios públicos).
-│── requirements.txt         # Dependencias necesarias para correr el servicio Backend.
-```
-Resumen:
+- `GET /`  
+  Verifica que el backend está activo.
 
-- main.py → Arranca el servidor.
-- routes/chatbot.py → Recibe el mensaje del usuario.
-- models/message.py → Valida que el mensaje esté bien formado.
-- services/nlp_service.py → Se comunica con el servicio de análisis NLP.
-- config.py y .env → Gestionan las configuraciones del proyecto.
+- `POST /api/chat`  
+  Envía un mensaje del usuario y recibe una respuesta emocional estructurada.
 
-## Servicio NLP
-Este directorio contiene el microservicio NLP Service responsable de:
-
-* Procesar los mensajes de usuario.
-* Realizar análisis de sentimientos.
-* Moderar lenguaje ofensivo.
-* Guardar interacciones.
-* Cachear resultados.
-```
-nlp/
-|── core/
-|   |── __init__.py
-|   |── cache.py             # Gestión de caché en Redis para evitar cálculos repetidos.
-|   |── cleaner.py           # Funciones para limpiar el texto: eliminar URLs, símbolos, normalizar.
-|   |── database.py          # Funciones para guardar interacciones en MongoDB de manera segura.
-|   |── emotion_model.py     # Carga y ajuste del modelo de análisis emocional usando Transformers.
-|   |── moderator.py         # Detección de palabras prohibidas o lenguaje ofensivo.
-|   |── processor.py         # Procesamiento básico de texto: lematización, tokenización, stopwords.
-|   |── response_generator.py# Lógica principal para generar respuestas seguras y empáticas.
-|   |── security.py          # Funciones de anonimización de datos sensibles mediante SHA-256.
-|── tests/
-|   |── __init__.py
-|   |── test_cache.py        # Pruebas automáticas para el sistema de caché Redis.
-|   |── test_cleaner.py      # Pruebas automáticas para funciones de limpieza de texto.
-|   |── test_emotion_model.py# Pruebas automáticas para análisis emocional del modelo NLP.
-|   |── test_processor.py    # Pruebas de tokenización y procesamiento de texto.
-|   |── test_response_save.py# Pruebas para guardar y verificar respuestas en MongoDB.
-|   |── test_security.py     # Pruebas para validar funciones de anonimización.
-|
-|── __init__.py
-|── .env                     # Variables sensibles específicas del servicio NLP.
-|── app.py                   # API FastAPI que recibe mensajes y devuelve análisis emocional.
-|── Dockerfile               # Construcción de la imagen final de producción para el servicio NLP.
-|── Dockerfile.base          # Imagen base precompilada para acelerar la construcción de Docker.
-|── requirements.txt         # Dependencias necesarias para el microservicio NLP.
-|── run_tests.sh             # Script Bash para lanzar todos los tests automáticamente.
-```
-## Archivos Comunes
-```
-.gitignore
-docker-compose.yml
-README.md               # Documentación
-```
-
-## ¿Por qué esta estructura?
-
-| Componente                    | Propósito |
-|:-------------------------------|:----------|
-| **routes/**                    | Define los endpoints de la API Backend de forma clara y desacoplada. |
-| **models/**                    | Estandariza la entrada y salida de datos con validaciones automáticas. |
-| **services/**                  | Separa la lógica de negocio para que las rutas estén limpias. |
-| **core/** (NLP)                 | Reúne toda la funcionalidad del procesamiento de lenguaje natural: análisis, moderación, seguridad, respuesta, cacheo. |
-| **tests/**                     | Facilita pruebas unitarias para cada componente clave de forma automática. |
-| **config.py** y **.env**        | Centraliza toda la configuración y variables sensibles. |
-| **Dockerfiles** y **docker-compose.yml** | Automatiza el despliegue de todos los servicios con ambientes controlados (producción y desarrollo). |
+- `GET /api/chat/historial?session_id=...`  
+  Recupera el historial de conversación de una sesión específica.
 
 ---
 
-# Visualizar la Base de Datos de MongoDB
+### NLP Service (`http://localhost:8001`)
 
-También puedes gestionar MongoDB directamente desde tu editor de código:
+- `GET /`  
+  Verifica que el servicio NLP está activo.
 
-- Abre Visual Studio Code.
-- Instala la extensión oficial **"MongoDB for VSCode"**.
-- Pulsa en el icono de MongoDB que aparecerá en la barra lateral.
-- Conecta utilizando la URI:
+- `POST /analyze`  
+  Analiza emocionalmente un mensaje individual.
+
+- `POST /gestionar`  
+  Procesa el mensaje dentro del flujo conversacional completo y devuelve la respuesta correspondiente.
+
+---
+
+# Guía de desarrollo o contribución
+
+¿Te gustaría mejorar este proyecto? ¡Las contribuciones son bienvenidas!
+
+Sigue estos pasos para colaborar:
+
+1. Haz un fork del repositorio.
+2. Crea una nueva rama para tu funcionalidad o mejora:
+
+```bash
+git checkout -b mejora-caracteristica
 ```
-mongodb://localhost:27017
+
+3. Realiza tus cambios y haz un commit:
+
 ```
-- Explora bases de datos y colecciones fácilmente desde el panel lateral de VSCode.
+git commit -m "Añadir nueva característica"
+```
+
+4. Sube los cambios a tu fork:
+```
+git push origin mejora-caracteristica
+```
+
+5. Abre un Pull Request describiendo detalladamente los cambios realizados.
+
+
+---
+
+### Proyecto desarrollado por Alejandro Delgado entre líneas de código, ideas persistentes... y cantidades sospechosas de café.
