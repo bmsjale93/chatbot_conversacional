@@ -1,8 +1,7 @@
 import httpx
 import traceback
 from app.models.message import Message
-from app.config import NLP_GESTIONAR_URL  # Se mueve la URL a config
-
+from app.config import NLP_GESTIONAR_URL
 
 async def analizar_mensaje(mensaje: Message) -> dict:
     """
@@ -14,34 +13,30 @@ async def analizar_mensaje(mensaje: Message) -> dict:
     }
 
     try:
-        print("[DEBUG] Enviando payload al NLP:",
-              payload)  # Log antes del request
+        print("[DEBUG] Enviando payload al NLP:", payload)
 
         async with httpx.AsyncClient(timeout=5.0) as client:
             response = await client.post(NLP_GESTIONAR_URL, json=payload)
             response.raise_for_status()
-
             json_data = response.json()
-            print("[DEBUG] Respuesta recibida del NLP:",
-                  json_data)  # Log de respuesta NLP
 
+            print("[DEBUG] Respuesta recibida del NLP:", json_data)
             return json_data
 
     except (httpx.RequestError, httpx.HTTPStatusError) as e:
         error_msg = "Error de conexión con el NLP" if isinstance(
             e, httpx.RequestError) else "Error HTTP desde NLP"
-        print(f"[ERROR NLP] {error_msg}: {str(e)}")  # Log del error específico
+        print(f"[ERROR NLP] {error_msg}: {str(e)}")
         return _respuesta_error(f"{error_msg}: {str(e)}")
 
     except Exception as e:
-        print("[ERROR NLP] Excepción inesperada al analizar mensaje:")
-        traceback.print_exc()  # Traza completa del error
+        print("[ERROR NLP] Excepción inesperada:")
+        traceback.print_exc()
         return _respuesta_error(f"Error inesperado procesando respuesta: {str(e)}")
-
 
 def _respuesta_error(mensaje_error: str) -> dict:
     """
-    Devuelve una estructura estándar de error para NLP.
+    Estructura estándar de respuesta en caso de error al contactar con el servicio NLP.
     """
     return {
         "error": mensaje_error,

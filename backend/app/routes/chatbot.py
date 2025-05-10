@@ -10,7 +10,7 @@ router = APIRouter()
 @router.post("/chat")
 async def chat_endpoint(mensaje: Message):
     """
-    Endpoint principal para recibir mensajes del usuario y obtener una respuesta emocional.
+    Procesa el mensaje del usuario y devuelve una respuesta emocional.
     """
     try:
         respuesta = await analizar_mensaje(mensaje)
@@ -46,7 +46,7 @@ async def chat_endpoint(mensaje: Message):
 @router.get("/chat/historial")
 async def obtener_historial(session_id: str):
     """
-    Devuelve el historial completo de conversación para una sesión dada.
+    Recupera el historial completo de una sesión.
     """
     try:
         historial = recuperar_historial(session_id)
