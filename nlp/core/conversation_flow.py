@@ -17,7 +17,9 @@ from core.empathy_utils import (
 )
 from core.database import guardar_interaccion_completa, generar_pdf_informe
 from core.cleaner import limpiar_texto
+from core.security import anonimizar_texto
 from utils.extract_name import extraer_nombre
+from core.pdf_utils import construir_interacciones_para_pdf
 import os
 import re
 
@@ -123,6 +125,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         intencion = detectar_intencion(texto_usuario)
 
         if intencion == "afirmativo":
+            datos_guardados["consentimiento"] = texto_usuario
             datos_guardados["consentimiento_aceptado"] = True
             guardar_interaccion_completa(
                 session_id=session_id,
@@ -149,6 +152,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
 
         nombre_usuario = extraer_nombre(texto_usuario)
         datos_guardados["nombre_usuario"] = nombre_usuario
+        datos_guardados["preguntar_nombre"] = nombre_usuario
 
         guardar_interaccion_completa(
             session_id=session_id,
@@ -185,6 +189,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         # Guardamos ambas versiones
         datos_guardados["identidad"] = identidad
         datos_guardados["identidad_original"] = texto_usuario
+        datos_guardados["preguntar_identidad"] = texto_usuario
 
         guardar_interaccion_completa(
             session_id=session_id,
@@ -627,7 +632,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             estado=estado_actual,
             pregunta="¿En los últimos días has sentido que no eres suficiente?",
             respuesta_usuario=texto_usuario,
-            puntuacion=puntuacion  # Ya garantizado que existe
+            puntuacion=puntuacion
         )
 
         respuesta = {
@@ -1487,16 +1492,19 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             puntuacion=puntuacion_empatia
         )
 
-        # 1. Generar PDF del informe
-        nombre_pdf = f"{session_id}.pdf"
-        ruta_pdf = os.path.join("static", "informes", nombre_pdf)
-        os.makedirs(os.path.dirname(ruta_pdf), exist_ok=True)
-        generar_pdf_informe(session_id, ruta_pdf)
+        # 1. Generar lista de interacciones automáticamente
+        interacciones = construir_interacciones_para_pdf(datos_guardados)
 
-        # 2. Construir URL pública del PDF
+        # 2. Generar PDF
+        nombre_pdf = f"{session_id}.pdf"
+        ruta_pdf = os.path.join("/app/static/informes", nombre_pdf)
+        os.makedirs(os.path.dirname(ruta_pdf), exist_ok=True)
+        generar_pdf_informe(interacciones, ruta_pdf)
+
+        # 3. Construir URL pública del PDF
         url_pdf = f"http://localhost:8000/static/informes/{nombre_pdf}"
 
-        # 3. Mensaje de cierre con enlace al informe
+        # 4. Mensaje de cierre con enlace al informe
         nombre = datos_guardados.get("nombre_usuario", "usuario")
         cierre = dialog_manager.obtener_mensaje_cierre(nombre)
         mensaje_final = (
@@ -1510,21 +1518,6 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             "modo_entrada": cierre["modo_entrada"],
             "sugerencias": cierre.get("sugerencias", [])
         }, datos_guardados
-
-
-
-    # --- Esperar próxima sección aún no definida ---
-    if estado_actual == "esperar_siguiente_pregunta":
-        respuesta = {
-            "estado": FIN,
-            "mensaje": (
-                "Gracias por compartir todo esto conmigo. Tus respuestas son muy valiosas.\n\n"
-                "De momento, esta es toda la información que necesitaba recopilar. Pronto continuaré con más preguntas."
-            ),
-            "modo_entrada": "fin",
-            "sugerencias": []
-        }
-        return respuesta, datos_guardados
 
 
     # --- Fallback de error ---

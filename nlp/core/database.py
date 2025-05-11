@@ -74,7 +74,7 @@ def guardar_interaccion_completa(
         "session_id": session_id,
         "estado": estado,
         "pregunta": pregunta,
-        "respuesta_usuario": respuesta_usuario,
+        "respuesta_hash": anonimizar_texto(respuesta_usuario or ""),
         "emocion": emocion,
         "confianza_emocion": confianza,
         "puntuacion": puntuacion,
@@ -85,6 +85,7 @@ def guardar_interaccion_completa(
         conversaciones.insert_one(doc)
     except PyMongoError as e:
         logger.error(f"Error guardando interacción completa: {e}")
+        logger.error(f"Contenido fallido: {doc}")
 
 
 def obtener_historial_conversacion(session_id: str) -> list:
@@ -95,18 +96,19 @@ def obtener_historial_conversacion(session_id: str) -> list:
     for doc in cursor:
         if "pregunta" in doc:
             historial.append({"role": "assistant", "content": doc["pregunta"]})
-        if "respuesta_usuario" in doc:
-            historial.append({"role": "user", "content": doc["respuesta_usuario"]})
+        if "respuesta_hash" in doc:
+            historial.append({"role": "user", "content": "[respuesta protegida]"})
     return historial
 
 
-def generar_pdf_informe(session_id: str, ruta_salida: str = "informe_emocional.pdf") -> Optional[str]:
+def generar_pdf_informe(interacciones: list[dict], ruta_salida: str = "informe_emocional.pdf") -> Optional[str]:
+    """
+    Genera un informe en PDF a partir de las interacciones completas recibidas en memoria.
+    No accede a MongoDB: requiere los textos completos directamente.
+    """
     try:
-        cursor = conversaciones.find({"session_id": session_id}).sort("timestamp", 1)
-        registros = list(cursor)
-
-        if not registros:
-            logger.warning(f"No se encontraron datos para la sesión: {session_id}")
+        if not interacciones:
+            logger.warning("No se proporcionaron interacciones para generar el informe.")
             return None
 
         class PDF(FPDF):
@@ -129,9 +131,9 @@ def generar_pdf_informe(session_id: str, ruta_salida: str = "informe_emocional.p
         pdf = PDF()
         pdf.add_page()
 
-        for idx, reg in enumerate(registros, 1):
+        for idx, reg in enumerate(interacciones, 1):
             pregunta = reg.get("pregunta", "")
-            respuesta = reg.get("respuesta_usuario", "")
+            respuesta = reg.get("respuesta_usuario", "[respuesta no disponible]")
             emocion = reg.get("emocion", "")
             confianza = reg.get("confianza_emocion", "")
             puntuacion = reg.get("puntuacion", "")
