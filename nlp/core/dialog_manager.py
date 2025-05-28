@@ -183,6 +183,7 @@ def obtener_mensaje_inutilidad() -> dict:
         ]
     }
 
+
 def obtener_detalle_inutilidad() -> dict:
     return {
         "estado": "detalle_inutilidad",
@@ -191,7 +192,11 @@ def obtener_detalle_inutilidad() -> dict:
             "¿En qué situaciones se te viene normalmente este pensamiento a la cabeza?"
         ),
         "modo_entrada": "mixto",
-        "sugerencias": ["Cuando me equivoco", "Cuando me comparo", "Cuando estoy solo/a"]
+        "sugerencias": [
+            "Cuando me equivoco",
+            "Cuando me comparo",
+            "Cuando estoy solo/a"
+        ]
     }
 
 def obtener_mensaje_ideacion_suicida() -> dict:

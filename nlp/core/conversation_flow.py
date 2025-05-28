@@ -645,6 +645,41 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         return respuesta, datos_guardados
 
 
+    # --- Detalle de inutilidad ---
+    if estado_actual == "detalle_inutilidad":
+        texto_limpio = limpiar_texto(texto_usuario)
+
+        if detectar_ambiguedad(texto_usuario):
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+
+        # Análisis emocional del contenido
+        resultado_emocional = analizar_sentimiento(texto_usuario)
+        emocion_detectada = resultado_emocional.get(
+            "estado_emocional", "neutral").lower()
+        confianza_emocion = resultado_emocional.get("confianza", "0%")
+
+        # Guardar la respuesta detallada
+        datos_guardados["detalle_inutilidad"] = texto_usuario
+        datos_guardados["emocion_detalle_inutilidad"] = emocion_detectada
+        datos_guardados["confianza_emocion_detalle_inutilidad"] = confianza_emocion
+
+        guardar_interaccion_completa(
+            session_id=session_id,
+            estado=estado_actual,
+            pregunta="¿En qué situaciones se te viene normalmente este pensamiento a la cabeza?",
+            respuesta_usuario=texto_usuario
+        )
+
+        # Avanzar al siguiente estado
+        siguiente = dialog_manager.obtener_mensaje_ideacion_suicida()
+        return {
+            "estado": siguiente["estado"],
+            "mensaje": siguiente["mensaje"],
+            "modo_entrada": siguiente["modo_entrada"],
+            "sugerencias": siguiente.get("sugerencias", [])
+        }, datos_guardados
+
+
     # --- Preguntar ideación suicida ---
     if estado_actual == "preguntar_ideacion_suicida":
         # Mapa exacto de respuestas válidas
