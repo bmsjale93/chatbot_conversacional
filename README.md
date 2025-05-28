@@ -103,14 +103,23 @@ Este script conecta con MongoDB y elimina todos los documentos de todas las cole
 
 Asegúrate de que cada servicio tenga configurado su archivo `.env` correspondiente:
 
-```env
-# backend/.env
-DATABASE_URL=mongodb://mongodb:27017/chatbot
-SECRET_KEY=supersecreta
 
-# nlp/.env
-DATABASE_URL=mongodb://mongodb:27017/chatbot
+### backend/.env
+```
+DATABASE_URL=mongodb://db:27017/chatbot
+SECRET_KEY=supersecreta123
+NLP_GESTIONAR_URL=http://nlp:8001/gestionar
+```
+### nlp/.env
+```
+DATABASE_URL=mongodb://db:27017/chatbot
 REDIS_HOST=redis
+REDIS_PORT=6379
+```
+
+### frontend/.env
+```
+BACKEND_URL=http://backend:8000/api/chat
 ```
 
 ---

@@ -1502,7 +1502,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         generar_pdf_informe(interacciones, ruta_pdf)
 
         # 3. Construir URL pública del PDF
-        url_pdf = f"http://localhost:8000/static/informes/{nombre_pdf}"
+        url_pdf = f"http://localhost:8010/static/informes/{nombre_pdf}"
 
         # 4. Mensaje de cierre con enlace al informe
         nombre = datos_guardados.get("nombre_usuario", "usuario")

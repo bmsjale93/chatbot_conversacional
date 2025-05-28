@@ -7,10 +7,10 @@ services:
       dockerfile: Dockerfile
     container_name: backend_chatbot
     ports:
-      - "8000:8000"
+      - "8010:8000"
     volumes:
       - ./backend:/app
-      - informes_compartidos:/app/static/informes  # Compartir PDFs con el servicio NLP
+      - ./shared_informes:/app/static/informes
     depends_on:
       - db
       - nlp
@@ -29,7 +29,7 @@ services:
       - ./nlp:/app
       - huggingface_cache:/root/.cache/huggingface
       - spacy_cache:/root/.cache/spacy
-      - informes_compartidos:/app/static/informes  # Compartido con backend para acceso a PDFs
+      - ./shared_informes:/app/static/informes
     env_file:
       - ./nlp/.env
     depends_on:
@@ -72,4 +72,3 @@ volumes:
   mongodb_data:
   huggingface_cache:
   spacy_cache:
-  informes_compartidos:  # Volumen persistente y compartido para informes PDF

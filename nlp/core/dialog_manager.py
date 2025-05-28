@@ -1,10 +1,12 @@
+from utils.destacar import destacar_pregunta_binaria
+
 # Funciones que controlan los mensajes y las fases del asistente virtual
 
 # -------------------- Fase de Presentación --------------------
 def obtener_mensaje_presentacion() -> dict:
     return {
         "estado": "presentacion",
-        "mensaje": (
+        "mensaje": destacar_pregunta_binaria (
             "¡Hola! Soy un asistente virtual diseñado para ayudar en la evaluación de tu estado de ánimo.\n\n"
             "Te haré algunas preguntas para conocer cómo te has sentido en los últimos días. "
             "Esta evaluación no sustituye a una consulta profesional y su único propósito es recopilar información de manera clara y organizada.\n\n"
@@ -57,7 +59,7 @@ def obtener_mensaje_identidad(nombre_usuario: str) -> dict:
 def obtener_mensaje_exploracion_tristeza(nombre_usuario: str) -> dict:
     return {
         "estado": "inicio_exploracion_tristeza",
-        "mensaje": (
+        "mensaje": destacar_pregunta_binaria (
             f"Gracias, {nombre_usuario}. Ahora voy a hacerte algunas preguntas sobre cómo te has sentido últimamente.\n"
             "No hay respuestas correctas o incorrectas. Lo importante es que respondas con sinceridad, según tu experiencia.\n\n"
             "Para empezar, ¿dirías que has sentido tristeza o bajones emocionales en los últimos días?\n\n"
@@ -129,7 +131,7 @@ def obtener_mensaje_intensidad_tristeza() -> dict:
 def obtener_mensaje_anhedonia() -> dict:
     return {
         "estado": "preguntar_anhedonia",
-        "mensaje": (
+        "mensaje": destacar_pregunta_binaria (
             "A veces, lo que antes disfrutábamos deja de parecernos interesante o emocionante.\n\n"
             "¿Has notado si en los últimos días has perdido el interés o el placer en algunas actividades que solías disfrutar?\n\n"
             "Puedes responder, por ejemplo: 'Sí, ya no disfruto de algunas cosas' o 'No, sigo disfrutando igual'."
@@ -157,7 +159,7 @@ def obtener_mensaje_anhedonia_profunda() -> dict:
 def obtener_mensaje_desesperanza() -> dict:
     return {
         "estado": "preguntar_desesperanza",
-        "mensaje": (
+        "mensaje": destacar_pregunta_binaria (
             "Cuando piensas en el futuro, ¿te resulta difícil encontrar algo que te ilusione o motive?\n\n"
             "Puedes responder con sinceridad, por ejemplo: 'Sí, últimamente nada me motiva' o 'No, tengo cosas que me ilusionan'."
         ),
@@ -168,7 +170,7 @@ def obtener_mensaje_desesperanza() -> dict:
 def obtener_mensaje_inutilidad() -> dict:
     return {
         "estado": "preguntar_inutilidad",
-        "mensaje": (
+        "mensaje": destacar_pregunta_binaria (
             "A veces, cuando estamos tristes, podemos ser muy duros con nosotros mismos.\n\n"
             "¿En los últimos días has sentido que no eres suficiente?\n\n"
             "Puedes responder, por ejemplo: 'Sí, a veces me siento así' o 'No, no me ha pasado'."
@@ -230,7 +232,7 @@ def obtener_cierre_alto_riesgo() -> dict:
 def obtener_mensaje_fatiga() -> dict:
     return {
         "estado": "preguntar_fatiga",
-        "mensaje": (
+        "mensaje": destacar_pregunta_binaria (
             "¿Has notado últimamente que te falta energía o te cansas con más facilidad de lo habitual?\n\n"
             "Puedes responder con sinceridad. Estoy aquí para escucharte sin juzgar."
         ),
@@ -245,7 +247,7 @@ def obtener_mensaje_fatiga() -> dict:
 def obtener_mensaje_sueno() -> dict:
     return {
         "estado": "preguntar_sueno",
-        "mensaje": (
+        "mensaje": destacar_pregunta_binaria (
             "¿Has notado últimamente cambios o dificultades con tu sueño?\n\n"
             "Puedes responder con sinceridad, y si no estás seguro/a también puedes decírmelo."
         ),
@@ -279,7 +281,7 @@ def obtener_detalle_sueno() -> dict:
 def obtener_mensaje_apetito() -> dict:
     return {
         "estado": "preguntar_apetito",
-        "mensaje": (
+        "mensaje": destacar_pregunta_binaria (
             "¿Has notado cambios en tu apetito o en la cantidad de comida que tomas?\n\n"
             "Puedes responder con sinceridad. Si no estás seguro/a, también puedes decírmelo."
         ),
@@ -351,7 +353,7 @@ def obtener_detalle_concentracion() -> dict:
 def obtener_mensaje_agitacion() -> dict:
     return {
         "estado": "preguntar_agitacion",
-        "mensaje": (
+        "mensaje": destacar_pregunta_binaria (
             "¿Has notado que últimamente sientes inquietud o agitación?\n\n"
             "Por ejemplo:\n"
             "- Sensación de no poder estar quieto\n"

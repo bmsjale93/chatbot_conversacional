@@ -100,17 +100,31 @@ def reiniciar_conversacion():
     return [crear_mensaje_bienvenida()], nuevo_id, gr.update(visible=True), gr.update(visible=False)
 
 # ------------------- Interfaz Gradio -------------------
-with gr.Blocks(theme=gr.themes.Soft()) as interfaz:
+with gr.Blocks(theme=gr.themes.Soft(), css=""".markdown strong { color:#266cff; }""") as interfaz:
+
     session_state = gr.State()
 
-    gr.Markdown("""
-    # Asistente Virtual de Evaluación Emocional
-    ---
-    Este asistente conversacional está diseñado para ayudarte a reflexionar sobre tu estado emocional.  
-    Puedes detener la conversación en cualquier momento.
+    with gr.Row(variant="panel"):
+        with gr.Column(scale=4):
+            gr.Markdown("""
+            <div style="font-size: 30px; font-weight: 600; color: #6464f4; line-height: 1.2;">
+                Asistente Virtual de Bienestar Emocional
+            </div>
+            <div style="font-size: 16px; color: #444; margin-top: 10px;">
+                Un espacio seguro donde podrás reflexionar sobre tu estado emocional.  
+                Tus respuestas serán tratadas con total confidencialidad.
+            </div>
+            """)
+        with gr.Column(scale=1, min_width=100, elem_id="logo_col"):
+            gr.Image(
+                value="images/logo.jpeg",
+                interactive=False,
+                show_label=False,
+                show_download_button=False,
+                width=100,
+                height=100,
+            )
 
-    **Importante:** En preguntas que requieran una respuesta afirmativa o negativa, responde claramente con **"sí"** o **"no"** para ayudar a que el asistente comprenda mejor tus respuestas.
-    """)
 
     with gr.Row(equal_height=True):
         with gr.Column(scale=3):
