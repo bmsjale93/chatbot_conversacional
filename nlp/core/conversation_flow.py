@@ -279,7 +279,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
     if estado_actual == "preguntar_frecuencia":
         texto_limpio = limpiar_texto(texto_usuario)
 
-        # Lista oficial de sugerencias permitidas
+        # Lista de sugerencias permitidas
         OPCIONES_FRECUENCIA_VALIDAS = {
             limpiar_texto("Todos los días"),
             limpiar_texto("Casi todos los días"),
@@ -335,12 +335,11 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         return respuesta, datos_guardados
 
 
-
     # --- Preguntar duración de tristeza ---
     if estado_actual == "preguntar_duracion":
         texto_limpio = limpiar_texto(texto_usuario)
 
-        # Lista oficial de sugerencias permitidas
+        # Lista de sugerencias permitidas
         OPCIONES_DURACION_VALIDAS = {
             limpiar_texto("Momentos puntuales"),
             limpiar_texto("Unas horas"),
@@ -401,7 +400,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
     if estado_actual == "intensidad_tristeza":
         texto_limpio = limpiar_texto(texto_usuario)
 
-        # Lista oficial permitida (números del 1 al 10 como texto)
+        # Lista permitida (números del 1 al 10 como texto)
         OPCIONES_INTENSIDAD_VALIDAS = {str(i) for i in range(1, 11)}
 
         if texto_limpio not in OPCIONES_INTENSIDAD_VALIDAS:
@@ -526,7 +525,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         emocion_detectada = resultado_emocional.get("estado_emocional", "neutral").lower()
         confianza_emocion = resultado_emocional.get("confianza", "0%")
 
-        # Mensaje fijo profesional, sin modificación por emoción
+        # Mensaje fijo, sin modificación por emoción
         mensaje_base = (
             "Gracias por compartirlo. A veces, perder interés por lo que antes disfrutábamos puede ser confuso, "
             "desconcertante o incluso doloroso. Reconocerlo ya es un paso importante para comprender cómo te sientes."

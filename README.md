@@ -50,25 +50,27 @@ Todo el sistema se encuentra **contenedorizado con Docker** para facilitar su de
 
 # Puesta en marcha de los servicios y validación del sistema
 
-## 1. Levantar todos los servicios
-
-Para construir la imagen base del NLP y lanzar todos los contenedores correctamente configurados, simplemente ejecuta desde la raíz del proyecto:
+## 1. Gestión del Proyecto mediante Menú Interactivo
+Puedes gestionar el entorno del proyecto de forma sencilla ejecutando el script interactivo:
 
 ```bash
 ./reset_and_run.sh
 ```
+Al hacerlo, aparecerá un menú con opciones para:
 
-Este script realiza automáticamente los siguientes pasos:
+1. Montar proyecto completo: Construye la imagen base nlp-base y levanta todos los servicios (Backend, NLP, Frontend, MongoDB, Redis).
 
-- Detiene y elimina todos los contenedores existentes.
-- Elimina las imágenes antiguas para forzar una reconstrucción limpia.
-- Construye la imagen base nlp-base desde nlp/Dockerfile.base.
-- Levanta todos los servicios definidos en docker-compose.yml, incluyendo:
-  - Backend (FastAPI)
-  - Servicio NLP (análisis emocional)
-  - Frontend (Gradio)
-  - MongoDB
-  - Redis
+2. Resetear el proyecto completo: Elimina contenedores e imágenes, y reconstruye todo desde cero.
+
+3. Levantar el proyecto (modo silencioso): Ejecuta docker compose up -d --build sin borrar recursos.
+
+4. Eliminar contenedores y volúmenes: Ejecuta docker compose down -v.
+
+5. Comprobar estado de los contenedores: Muestra el estado actual de los contenedores.
+
+6. Limpiar base de datos: Ejecuta el script limpiar_base.py.
+
+7. Salir: Finaliza el script.
 
 **Asegúrate de que el script tenga permisos de ejecución.** Puedes asignarlos con:
 ```bash
@@ -84,7 +86,7 @@ Deberías ver una salida similar a esta:
 
 | Contenedor        | Estado | Puertos                  |
 |-------------------|--------|---------------------------|
-| backend_chatbot   | Up     | 8000 → 0.0.0.0:8000       |
+| backend_chatbot   | Up     | 8010 → 0.0.0.0:8010       |
 | nlp_service       | Up     | 8001 → 0.0.0.0:8001       |
 | frontend_gradio   | Up     | 7860 → 0.0.0.0:7860       |
 | mongodb           | Up     | 27017/tcp                 |
