@@ -50,15 +50,24 @@ def construir_interacciones_para_pdf(datos_guardados: dict) -> list:
             continue
 
         pregunta = MAPA_PREGUNTAS_PDF[clave]
-        base = clave.replace("_texto", "").replace("respuesta_", "").replace("detalle_", "")
+
+        # Normalización de base para obtener emoción y puntuación asociadas
+        if clave.endswith("_texto"):
+            base = clave.replace("_texto", "")
+        elif clave.startswith("respuesta_"):
+            base = clave.replace("respuesta_", "")
+        elif clave.startswith("detalle_"):
+            base = clave.replace("detalle_", "")
+        else:
+            base = clave
 
         emocion = datos_guardados.get(f"emocion_{base}", "")
         confianza = datos_guardados.get(f"confianza_emocion_{base}", "")
         puntuacion = datos_guardados.get(f"puntuacion_{base}", "")
 
-        # Sustituir valor booleano por el texto original del usuario si es necesario
+        # Usar texto original si es un valor booleano con texto asociado
         if clave in CLAVES_BOOLEANAS_CON_TEXTO:
-            texto_usuario = datos_guardados.get("anhedonia_texto", str(valor))
+            texto_usuario = datos_guardados.get(f"{clave}_texto", str(valor))
         else:
             texto_usuario = str(valor)
 

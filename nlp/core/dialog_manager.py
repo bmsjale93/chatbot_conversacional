@@ -321,7 +321,7 @@ def obtener_detalle_apetito() -> dict:
 def obtener_mensaje_concentracion() -> dict:
     return {
         "estado": "preguntar_concentracion",
-        "mensaje": (
+        "mensaje": destacar_pregunta_binaria (
             "Cuando tenemos el ánimo bajo, puede ser difícil concentrarnos.\n\n"
             "¿Te ha costado enfocarte en actividades como leer, trabajar, seguir una conversación, etc.?\n"
             "Cuéntame si te ocurre y con qué actividades.\n\n"
@@ -448,7 +448,7 @@ def obtener_mensaje_consecuentes_generales_2() -> dict:
 def obtener_mensaje_impacto_diario() -> dict:
     return {
         "estado": "preguntar_impacto_diario",
-        "mensaje": (
+        "mensaje": destacar_pregunta_binaria (
             "¿Dirías que estos sentimientos han afectado tu vida diaria? Por ejemplo, en el trabajo, estudios, relaciones sociales o bienestar personal."
         ),
         "modo_entrada": "mixto",

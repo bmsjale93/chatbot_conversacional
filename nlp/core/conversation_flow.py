@@ -209,19 +209,17 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
     if estado_actual == "inicio_exploracion_tristeza":
         texto_limpio = limpiar_texto(texto_usuario)
 
-        # Detectar ambigüedad general o ambigüedad específica de identidad
+        # Detectar ambigüedad general
         if detectar_ambiguedad(texto_limpio):
             return generar_respuesta_aclaratoria(estado_actual), datos_guardados
 
         # Detectar intención (afirmativa, negativa, desconocida)
         intencion = detectar_intencion(texto_limpio)
 
-        # Si la intención es desconocida, comprobar si la respuesta es ambigua
-        if intencion == "desconocido":
-            if detectar_ambiguedad(texto_limpio):
-                return generar_respuesta_aclaratoria(estado_actual), datos_guardados
+        if intencion == "desconocido" and detectar_ambiguedad(texto_limpio):
+            return generar_respuesta_aclaratoria(estado_actual), datos_guardados
 
-        # Detectar emoción SOLO si la intención es afirmativa
+        # Detectar emoción solo si la intención es afirmativa
         if intencion == "afirmativo":
             resultado_emocional = analizar_sentimiento(texto_usuario)
             emocion_detectada = resultado_emocional.get("estado_emocional", "neutral").lower()
@@ -238,9 +236,10 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         else:
             return generar_respuesta_aclaratoria(estado_actual), datos_guardados
 
-        # Guardar puntuación y emoción
+        # Guardar respuesta, emoción y puntuación
         datos_guardados["respuesta_tristeza"] = texto_usuario
         datos_guardados["emocion_tristeza"] = emocion_detectada
+        datos_guardados["confianza_emocion_tristeza"] = confianza_emocion
         datos_guardados["puntuacion_tristeza"] = puntuacion
 
         asignar_puntuacion(session_id, "tristeza", str(puntuacion))
@@ -253,7 +252,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             puntuacion=puntuacion
         )
 
-        # --- Construir respuesta según la intención detectada ---
+        # Construir respuesta según intención detectada
         if intencion == "afirmativo":
             respuesta_base = dialog_manager.obtener_mensaje_frecuencia_tristeza()
             respuesta = {
@@ -273,6 +272,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             }
 
         return respuesta, datos_guardados
+
 
 
     # --- Preguntar frecuencia de tristeza ---
@@ -299,13 +299,22 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         # Detectar emoción
         resultado_emocional = analizar_sentimiento(texto_usuario)
         emocion_detectada = resultado_emocional.get("estado_emocional", "neutral").lower()
+        confianza_emocion = resultado_emocional.get("confianza", "0%")
 
-        # Guardar información y puntuación
-        datos_guardados["frecuencia_tristeza"] = texto_usuario
-        datos_guardados["emocion_frecuencia"] = emocion_detectada
+        # Calcular puntuación
         puntuacion_frecuencia = calcular_puntuacion("frecuencia", texto_usuario)
         asignar_puntuacion(session_id, "frecuencia", texto_usuario)
 
+        # Base para claves coherentes con el PDF
+        base_clave = "frecuencia_tristeza"
+
+        # Guardar información en memoria
+        datos_guardados[base_clave] = texto_usuario
+        datos_guardados[f"emocion_{base_clave}"] = emocion_detectada
+        datos_guardados[f"confianza_emocion_{base_clave}"] = confianza_emocion
+        datos_guardados[f"puntuacion_{base_clave}"] = puntuacion_frecuencia
+
+        # Guardar en base de datos
         guardar_interaccion_completa(
             session_id=session_id,
             estado=estado_actual,
@@ -314,6 +323,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             puntuacion=puntuacion_frecuencia
         )
 
+        # Avanzar al siguiente estado (duración)
         respuesta_base = dialog_manager.obtener_mensaje_duracion_tristeza()
         respuesta = {
             "estado": "preguntar_duracion",
@@ -323,6 +333,8 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         }
 
         return respuesta, datos_guardados
+
+
 
     # --- Preguntar duración de tristeza ---
     if estado_actual == "preguntar_duracion":
@@ -348,14 +360,22 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         # Detectar emoción
         resultado_emocional = analizar_sentimiento(texto_usuario)
         emocion_detectada = resultado_emocional.get("estado_emocional", "neutral").lower()
+        confianza_emocion = resultado_emocional.get("confianza", "0%")
 
-        # Guardar info y puntuación
-        datos_guardados["duracion_tristeza"] = texto_usuario
-        datos_guardados["emocion_duracion"] = emocion_detectada
-
+        # Calcular puntuación
         puntuacion_duracion = calcular_puntuacion("duracion", texto_usuario)
         asignar_puntuacion(session_id, "duracion", texto_usuario)
 
+        # Base para las claves correctas en el PDF
+        base_clave = "duracion_tristeza"
+
+        # Guardar en memoria
+        datos_guardados[base_clave] = texto_usuario
+        datos_guardados[f"emocion_{base_clave}"] = emocion_detectada
+        datos_guardados[f"confianza_emocion_{base_clave}"] = confianza_emocion
+        datos_guardados[f"puntuacion_{base_clave}"] = puntuacion_duracion
+
+        # Guardar en base de datos
         guardar_interaccion_completa(
             session_id=session_id,
             estado=estado_actual,
@@ -364,6 +384,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             puntuacion=puntuacion_duracion
         )
 
+        # Avanzar al siguiente estado
         respuesta_base = dialog_manager.obtener_mensaje_intensidad_tristeza()
         respuesta = {
             "estado": "intensidad_tristeza",
@@ -375,11 +396,12 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         return respuesta, datos_guardados
 
 
+
     # --- Preguntar intensidad ---
     if estado_actual == "intensidad_tristeza":
         texto_limpio = limpiar_texto(texto_usuario)
 
-        # Lista oficial permitida
+        # Lista oficial permitida (números del 1 al 10 como texto)
         OPCIONES_INTENSIDAD_VALIDAS = {str(i) for i in range(1, 11)}
 
         if texto_limpio not in OPCIONES_INTENSIDAD_VALIDAS:
@@ -388,14 +410,22 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         # Detectar emoción
         resultado_emocional = analizar_sentimiento(texto_usuario)
         emocion_detectada = resultado_emocional.get("estado_emocional", "neutral").lower()
+        confianza_emocion = resultado_emocional.get("confianza", "0%")
 
-        # Guardar puntuación y respuesta
-        datos_guardados["intensidad_tristeza"] = texto_usuario
-        datos_guardados["emocion_intensidad"] = emocion_detectada
-
+        # Calcular puntuación
         puntuacion_intensidad = calcular_puntuacion("intensidad", texto_usuario)
         asignar_puntuacion(session_id, "intensidad", texto_usuario)
 
+        # Base para claves coherentes con el PDF
+        base_clave = "intensidad_tristeza"
+
+        # Guardar en memoria
+        datos_guardados[base_clave] = texto_usuario
+        datos_guardados[f"emocion_{base_clave}"] = emocion_detectada
+        datos_guardados[f"confianza_emocion_{base_clave}"] = confianza_emocion
+        datos_guardados[f"puntuacion_{base_clave}"] = puntuacion_intensidad
+
+        # Guardar en base de datos
         guardar_interaccion_completa(
             session_id=session_id,
             estado=estado_actual,
@@ -435,6 +465,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             puntuacion = 1
             datos_guardados["anhedonia"] = True
             datos_guardados["emocion_anhedonia"] = emocion_detectada
+            datos_guardados["confianza_emocion_anhedonia"] = confianza_emocion
             datos_guardados["puntuacion_anhedonia"] = puntuacion
 
             asignar_puntuacion(session_id, "anhedonia", str(puntuacion))
@@ -449,11 +480,11 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
                 "sugerencias": respuesta_base.get("sugerencias", [])
             }
 
-
         elif intencion == "negativo":
             puntuacion = 0
             datos_guardados["anhedonia"] = False
             datos_guardados["emocion_anhedonia"] = emocion_detectada
+            datos_guardados["confianza_emocion_anhedonia"] = confianza_emocion
             datos_guardados["puntuacion_anhedonia"] = puntuacion
 
             asignar_puntuacion(session_id, "anhedonia", str(puntuacion))
@@ -463,9 +494,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             )
             mensaje_empatico = generar_respuesta_empatica(mensaje_base, tipo=emocion_detectada)
 
-            # Obtenemos la siguiente pregunta
             siguiente = dialog_manager.obtener_mensaje_desesperanza()
-
             respuesta = {
                 "estado": siguiente["estado"],
                 "mensaje": f"{mensaje_empatico}\n\n{siguiente['mensaje']}",
@@ -487,6 +516,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         return respuesta, datos_guardados
 
 
+
     # --- Detalle actividades con anhedonia ---
     if estado_actual == "detalle_anhedonia":
         if detectar_ambiguedad(texto_usuario):
@@ -505,7 +535,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
         respuesta_base = dialog_manager.obtener_mensaje_desesperanza()
         mensaje_completo = f"{mensaje_base}\n\n{respuesta_base['mensaje']}"
 
-        # Guardar interacción incluyendo la emoción detectada
+        # Guardar interacción incluyendo emoción detectada
         guardar_interaccion_completa(
             session_id=session_id,
             estado=estado_actual,
@@ -515,10 +545,10 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             confianza=confianza_emocion
         )
 
-        # Guardar en memoria temporal
+        # Guardar en memoria temporal con claves específicas
         datos_guardados["actividades_sin_disfrute"] = texto_usuario
-        datos_guardados["emocion_ultima_respuesta"] = emocion_detectada
-        datos_guardados["confianza_emocion"] = confianza_emocion
+        datos_guardados["emocion_actividades_sin_disfrute"] = emocion_detectada
+        datos_guardados["confianza_emocion_actividades_sin_disfrute"] = confianza_emocion
 
         respuesta = {
             "estado": "preguntar_desesperanza",
@@ -688,7 +718,7 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             "Sí, pero sin intención de hacerme daño": 1,
             "Sí, pensé en hacerme daño, pero no tengo intención": 2,
             "Sí, pensé en hacerme daño y tengo un plan": 3,
-            "No entiendo la pregunta": None  # Se usa para activar aclaración
+            "No entiendo la pregunta": None
         }
 
         if texto_usuario not in mapa_respuestas:
@@ -741,21 +771,24 @@ def procesar_mensaje(session_id: str, texto_usuario: str, estado_actual: str, da
             mensaje_cierre = dialog_manager.obtener_cierre_alto_riesgo()
             return mensaje_cierre, datos_guardados
 
-        # Guardar datos
+        # Guardar datos en memoria temporal
         datos_guardados["puntuacion_ideacion_suicida"] = puntuacion
         datos_guardados["ideacion_suicida_texto"] = texto_usuario
         datos_guardados["emocion_ideacion_suicida"] = emocion_detectada
         datos_guardados["confianza_emocion_ideacion"] = confianza_emocion
 
+        # Guardar interacción completa con emoción y confianza
         guardar_interaccion_completa(
             session_id=session_id,
             estado=estado_actual,
             pregunta="¿Has tenido pensamientos relacionados con el suicidio en las últimas dos semanas?",
             respuesta_usuario=texto_usuario,
-            puntuacion=puntuacion
+            puntuacion=puntuacion,
+            emocion=emocion_detectada,
+            confianza=confianza_emocion
         )
 
-        # Pasar automáticamente a la siguiente pregunta (fatiga)
+        # Siguiente pregunta (fatiga)
         siguiente = dialog_manager.obtener_mensaje_fatiga()
         return {
             "estado": siguiente["estado"],
